@@ -1,0 +1,35 @@
+Metadata-Version: 2.4
+Name: smart-expense-tracker-api
+Version: 0.1.0
+Summary: FastAPI backend for the smart expense tracker
+Requires-Python: >=3.12
+Description-Content-Type: text/markdown
+Requires-Dist: fastapi<1.0.0,>=0.115.0
+Requires-Dist: pydantic-settings<3.0.0,>=2.6.0
+Requires-Dist: python-multipart<1.0.0,>=0.0.12
+Requires-Dist: sqlalchemy<3.0.0,>=2.0.36
+Requires-Dist: psycopg[binary]<4.0.0,>=3.2.3
+Requires-Dist: uvicorn[standard]<1.0.0,>=0.32.0
+
+# Backend
+
+FastAPI starter for the Smart Expense Tracker.
+
+## Run locally
+
+```bash
+pip install -e .
+uvicorn app.main:app --reload
+```
+
+By default, the backend uses a local SQLite database for quick development.
+Set `DATABASE_URL` to PostgreSQL when you want to run against Postgres.
+
+## First endpoints
+
+- `GET /health`
+- `GET /api/v1/categories`
+- `POST /api/v1/categories`
+- `GET /api/v1/transactions`
+- `POST /api/v1/transactions`
+- `GET /api/v1/reports/summary`

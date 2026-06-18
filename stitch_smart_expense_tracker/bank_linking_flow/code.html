@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Bank Connections - FinTrack AI</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary": "#ffffff",
+                        "on-secondary-fixed": "#00174b",
+                        "surface-container-high": "#e6e8ea",
+                        "on-secondary-container": "#fefcff",
+                        "surface-container": "#eceef0",
+                        "on-primary-fixed-variant": "#3f465c",
+                        "on-primary-fixed": "#131b2e",
+                        "primary-fixed": "#dae2fd",
+                        "outline-variant": "#c6c6cd",
+                        "on-surface-variant": "#45464d",
+                        "on-primary-container": "#7c839b",
+                        "on-tertiary-fixed": "#002113",
+                        "on-secondary-fixed-variant": "#003ea8",
+                        "tertiary-container": "#002113",
+                        "surface-container-low": "#f2f4f6",
+                        "error-container": "#ffdad6",
+                        "inverse-surface": "#2d3133",
+                        "surface-bright": "#f7f9fb",
+                        "on-error-container": "#93000a",
+                        "inverse-primary": "#bec6e0",
+                        "surface": "#f7f9fb",
+                        "primary-fixed-dim": "#bec6e0",
+                        "on-tertiary-fixed-variant": "#005236",
+                        "secondary": "#0051d5",
+                        "surface-dim": "#d8dadc",
+                        "secondary-fixed": "#dbe1ff",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-fixed-dim": "#4edea3",
+                        "inverse-on-surface": "#eff1f3",
+                        "surface-variant": "#e0e3e5",
+                        "primary": "#000000",
+                        "surface-tint": "#565e74",
+                        "tertiary-fixed": "#6ffbbe",
+                        "secondary-fixed-dim": "#b4c5ff",
+                        "on-surface": "#191c1e",
+                        "on-error": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "primary-container": "#131b2e",
+                        "on-secondary": "#ffffff",
+                        "secondary-container": "#316bf3",
+                        "on-background": "#191c1e",
+                        "on-tertiary-container": "#009668",
+                        "error": "#ba1a1a",
+                        "surface-container-highest": "#e0e3e5",
+                        "outline": "#76777d",
+                        "background": "#f7f9fb",
+                        "tertiary": "#000000"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "3xl": "64px",
+                        "2xl": "48px",
+                        "xs": "4px",
+                        "container-max": "1280px",
+                        "md": "16px",
+                        "sm": "8px",
+                        "xl": "32px",
+                        "lg": "24px",
+                        "gutter": "24px",
+                        "base": "4px"
+                    },
+                    "fontFamily": {
+                        "display-lg": ["Plus Jakarta Sans"],
+                        "body-md": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-lg-mobile": ["Plus Jakarta Sans"],
+                        "headline-md": ["Plus Jakarta Sans"],
+                        "headline-lg": ["Plus Jakarta Sans"],
+                        "body-lg": ["Inter"],
+                        "label-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "display-lg": ["48px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                        "label-md": ["14px", {"lineHeight": "1.4", "letterSpacing": "0.01em", "fontWeight": "500"}],
+                        "headline-lg-mobile": ["24px", {"lineHeight": "1.3", "fontWeight": "700"}],
+                        "headline-md": ["24px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                        "headline-lg": ["32px", {"lineHeight": "1.3", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                        "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "label-sm": ["12px", {"lineHeight": "1.2", "fontWeight": "600"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .modal-blur {
+            backdrop-filter: blur(8px);
+        }
+        .transition-all-300 {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .bento-card {
+            background: #ffffff;
+            border: 1px solid #E2E8F0;
+            border-radius: 1rem;
+            transition: all 0.3s ease;
+        }
+        .bento-card:hover {
+            box-shadow: 0px 10px 15px -3px rgba(15, 23, 42, 0.08);
+            border-color: #cbd5e1;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md min-h-screen">
+<!-- Top Navigation Bar -->
+<header class="bg-surface border-b border-outline-variant fixed top-0 left-0 w-full z-30 h-16">
+<div class="flex justify-between items-center w-full px-lg h-full max-w-container-max mx-auto">
+<div class="flex items-center gap-xl">
+<span class="text-headline-md font-headline-md font-bold text-primary">FinTrack AI</span>
+<nav class="hidden md:flex items-center gap-lg h-full">
+<a class="text-on-surface-variant font-label-md hover:bg-surface-container-low px-md py-sm rounded-lg transition-colors" href="#">Dashboard</a>
+<a class="text-on-surface-variant font-label-md hover:bg-surface-container-low px-md py-sm rounded-lg transition-colors" href="#">Transactions</a>
+<a class="text-secondary font-bold border-b-2 border-secondary px-md py-sm h-full flex items-center" href="#">Budgets</a>
+<a class="text-on-surface-variant font-label-md hover:bg-surface-container-low px-md py-sm rounded-lg transition-colors" href="#">Analytics</a>
+</nav>
+</div>
+<div class="flex items-center gap-md">
+<button class="material-symbols-outlined p-sm hover:bg-surface-container-low rounded-full transition-all text-on-surface-variant" data-icon="notifications">notifications</button>
+<button class="material-symbols-outlined p-sm hover:bg-surface-container-low rounded-full transition-all text-on-surface-variant" data-icon="settings">settings</button>
+<div class="w-10 h-10 rounded-full overflow-hidden border border-outline-variant">
+<img alt="User profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDzcUKvEdgv2R1PTQNH4ryDhbY5KvVpBVhOJb-TMqJzOq8ypZIzW1Jdu6N88mExZCvMzxvUMQhluNAi_FOuh271QEKFwagp7HVm72r3kc4-B0ESRCY8d1Sbfg4Df9RL6VBWY4SLarNNSlQT7YqdGcAg0WM3N4nZ6SU0MHVyPH1YEQJ-XNOC_64ypC1QUDHSc7YQMbSDowqvXF5cfyUtCXF5erquEMFgTjj8-E9-fB0mKXu6vASjKOrP9fFLMeswNZmF9Yedylpv5HZX"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="pt-24 pb-16 px-lg max-w-container-max mx-auto">
+<div class="flex justify-between items-end mb-xl">
+<div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface mb-xs">Bank Connections</h1>
+<p class="text-on-surface-variant">Manage your linked financial institutions securely.</p>
+</div>
+<button class="bg-secondary text-on-secondary px-lg py-md rounded-xl font-label-md flex items-center gap-sm hover:opacity-90 active:scale-95 transition-all shadow-md" onclick="openModal()">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+                Link New Bank
+            </button>
+</div>
+<!-- Bento Grid for Existing Connections -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-lg">
+<!-- Chase Bank Card -->
+<div class="bento-card p-xl flex flex-col justify-between min-h-[200px]">
+<div class="flex justify-between items-start">
+<div class="flex items-center gap-md">
+<div class="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center border border-blue-100">
+<img alt="Chase Logo" class="w-8 h-8 object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCRsbBEUs02EL2KblqPH1psdOMa-5lBabWIerAPqAmxB-X78zmJ0WJz9bA5zXjANVZ7hwUVbl_d0ZSuShCGlpGYgVvITLbRsgC8g1L92_0usGw2gHptETeODt9mdMF4G1UmFsQ3MtBW2M4iUeJaoiMoiLpy_df9WCiMGIuXzVG4aWuPaLUeT3pj9FHes5Z0OFikfl5CIFlBjq9h5SwzfO0kpcE7ecb7DkEaDkLeIGY04iV96Vlttn1gKOzntnGfF10Ow2n8JVyntoXw"/>
+</div>
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface">Chase Checking</h3>
+<p class="text-label-sm text-on-surface-variant">•••• 4412</p>
+</div>
+</div>
+<span class="bg-on-tertiary-container/10 text-on-tertiary-container px-sm py-xs rounded-full font-label-sm uppercase">Active</span>
+</div>
+<div class="mt-xl flex items-end justify-between">
+<div>
+<p class="text-label-sm text-on-surface-variant">Current Balance</p>
+<p class="font-display-lg text-headline-lg">$12,450.80</p>
+</div>
+<span class="material-symbols-outlined text-outline" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+<!-- BoA Bank Card -->
+<div class="bento-card p-xl flex flex-col justify-between min-h-[200px]">
+<div class="flex justify-between items-start">
+<div class="flex items-center gap-md">
+<div class="w-12 h-12 bg-red-50 rounded-lg flex items-center justify-center border border-red-100">
+<img alt="BoA Logo" class="w-8 h-8 object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDwS-tF3-CMtzOOjWf9D4ARM8BuOtmZIlEau66j2jqHA_y8QkNShOH28Wj6OBGizcQNOxdkZy90x49i9-40q9tNyGLjtDJ6m5-OOhAPJ7_7T_oU5-yJnlUy7AGC4014Hgge3-8ZhuQE6sLpMMz5G666TiM0zp10hoH-WtGA__zIZKF0dM_s7B4v8Ymtnl1Mg5fSPR0BrPqWaj12gJkFS3QeMNv09TxOy-OpCIeCQrZP5n9LaBQqMyBq2mMfk7a_iPweBrNOEs3MRE4I"/>
+</div>
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface">BoA Savings</h3>
+<p class="text-label-sm text-on-surface-variant">•••• 8901</p>
+</div>
+</div>
+<span class="bg-on-tertiary-container/10 text-on-tertiary-container px-sm py-xs rounded-full font-label-sm uppercase">Active</span>
+</div>
+<div class="mt-xl flex items-end justify-between">
+<div>
+<p class="text-label-sm text-on-surface-variant">Current Balance</p>
+<p class="font-display-lg text-headline-lg">$45,210.33</p>
+</div>
+<span class="material-symbols-outlined text-outline" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+<!-- Empty Placeholder State -->
+<div class="bento-card p-xl border-dashed border-2 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-surface-container-low group" onclick="openModal()">
+<div class="w-12 h-12 rounded-full bg-surface-container-high flex items-center justify-center mb-md group-hover:bg-secondary-container transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-on-secondary-container" data-icon="add_circle">add_circle</span>
+</div>
+<p class="font-headline-md text-on-surface">Link another account</p>
+<p class="text-label-sm text-on-surface-variant mt-sm">Expand your financial overview</p>
+</div>
+</div>
+</main>
+<!-- Modal Overlay -->
+<div class="fixed inset-0 z-50 hidden" id="bankModal">
+<!-- Backdrop -->
+<div class="absolute inset-0 bg-on-surface/40 modal-blur" onclick="closeModal()"></div>
+<!-- Modal Content Container -->
+<div class="relative min-h-screen flex items-center justify-center p-lg">
+<div class="bg-surface-container-lowest w-full max-w-lg rounded-[2rem] shadow-2xl overflow-hidden transition-all-300 transform scale-95 opacity-0" id="modalCard">
+<!-- Modal Header -->
+<div class="px-xl pt-xl pb-lg flex justify-between items-center bg-white border-b border-outline-variant">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-on-tertiary-container" data-icon="verified_user" style="font-variation-settings: 'FILL' 1;">verified_user</span>
+<span class="font-label-sm uppercase tracking-wider text-on-tertiary-container">Secure Bank Link</span>
+</div>
+<button class="material-symbols-outlined text-outline hover:text-on-surface transition-colors p-sm" data-icon="close" onclick="closeModal()">close</button>
+</div>
+<!-- Step 1: Selection -->
+<div class="p-xl block" id="step1">
+<h2 class="font-headline-lg text-headline-lg mb-sm">Select your institution</h2>
+<p class="text-on-surface-variant mb-xl">Connect to over 10,000 financial institutions securely through FinTrack AI.</p>
+<div class="relative mb-xl">
+<span class="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-outline" data-icon="search">search</span>
+<input class="w-full pl-3xl pr-md py-md bg-surface-container border border-outline-variant rounded-xl focus:ring-2 focus:ring-secondary/20 focus:border-secondary outline-none transition-all" placeholder="Search for your bank..." type="text"/>
+</div>
+<div class="grid grid-cols-3 gap-md mb-xl">
+<button class="flex flex-col items-center gap-sm p-md rounded-2xl hover:bg-surface-container transition-colors border border-transparent hover:border-outline-variant" onclick="nextStep(2)">
+<img alt="Chase" class="w-10 h-10 object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDJVRaYPNjMfFWOKAZEuEY1zD5naG8PdoHcrpsMKJdXMnvssyKlR8bfJOgd9QBNkRcC8hqIV_rl-j7nZtJdNOlBUQEXDasntUbbYpjqqTdBp-HLMmzzuNixsUtkoujveZoAnOhRZh8jKemPWnjB4rRVTQH0Liw9w2mMwLwpxwXVBjXe-0wVZm_jBz9S9VbYRVtqoZqsn3TJ7MuKt9fb9DA4yj6Z2TIyWsebEZCcu_PerJnvsC6TpfWZs_gFyD24CaI5SsphSY9Ss-Db"/>
+<span class="text-label-md">Chase</span>
+</button>
+<button class="flex flex-col items-center gap-sm p-md rounded-2xl hover:bg-surface-container transition-colors border border-transparent hover:border-outline-variant" onclick="nextStep(2)">
+<img alt="BoA" class="w-10 h-10 object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCHWBeISjudTiVfGtqFsYjPY1aHhWEeimiJCViIGpfHplxIGDguYZDOem3tySX-qDOs1qkvZ1x-JfbEsZDn-l2qR3-TB6RiW-LsrjGT3e8Z6XJFU78sRDuAYrOaolhKx4HzcV_iQNsDFWuPRKAYkqAkSQa_09lztgXwo-m0-Fimjca3Tu-jqxDfhm7_dOmdtax_Xsu_K-DKyt4tZVXXCMkbVNS4RmpBfxezifkYaIyG75E65jSqp648R3ucxSFYu-WzunDGfBpOZcY5"/>
+<span class="text-label-md">BoA</span>
+</button>
+<button class="flex flex-col items-center gap-sm p-md rounded-2xl hover:bg-surface-container transition-colors border border-transparent hover:border-outline-variant" onclick="nextStep(2)">
+<img alt="Wells Fargo" class="w-10 h-10 object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDlqYJshgBQZ0KKTMnryYYfxMy1KIalQ2vN5hfT_FRn5f-QxPhgwBIF0yZjcyzYnN2K-cySaC00mH5yviD72hjeRVFOKTXU_iyz9MSw5o3_oDdmnYEp4vhF0R7Y7vgGFqk3-DozLaiT_4B2dqAeUTKCHpY0cfvNOR3BEbvY5IHr2Jo5e2D4L3JHu-9PsNydu-tDkdJlKDh6pM_v0-3sNpVdrlvbXnKIRycXs4DWeD1EmiqC0CpjCnZ6-u0_wqFL-65ENkvP5gEQDQpG"/>
+<span class="text-label-md">Wells Fargo</span>
+</button>
+<button class="flex flex-col items-center gap-sm p-md rounded-2xl hover:bg-surface-container transition-colors border border-transparent hover:border-outline-variant" onclick="nextStep(2)">
+<img alt="Citi" class="w-10 h-10 object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBe_LoBnH_iRmAqggJuL7-8LMW7EURGlDBQQTLvSsC6SIZ84YuFwnT1V9zIbFWhYG_j9JqgVWAht05hmLOPPy_s2iPc4E0SvrTFIZEIgjTxspRGeRrl6MHD2KF0RkBXJ2FtXFJ27uncu7FIfITfQa19KkEp0tVBHMFp_RWHQYwZi-5D-HLAhOsxG6MwYYvS0f4Whnc1rf-oql91DEx2Fz3HW9OWA6svTIVuTV4VVIo6sm2vo8rt6binDDxcCGVAtS96UoknZdOoMII7"/>
+<span class="text-label-md">Citi</span>
+</button>
+<button class="flex flex-col items-center gap-sm p-md rounded-2xl hover:bg-surface-container transition-colors border border-transparent hover:border-outline-variant" onclick="nextStep(2)">
+<img alt="Capital One" class="w-10 h-10 object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDCwqwpK_ar3bngQF3WpHpKOeIj9E-W7BNLLz1nvTMN_1l2dAorGY0-75z2mmQKNB1vLUiZKMqzSpQ0r9TmnLstwnYwOfxRW4QuCVXDqNCHhkQ_fPZKSVC0wF56WHjI0pKIg9o50q_xIicNon1L9DGcfMx3Nh-Gdk8GWU7PH8SAXfxJDj9R7zgsV0Vg9CNlR8MqcUuTF3KzZaItpn-vXb7B1Zfj3mP0g9rSJxn-SssSCYWcML59vIIv58NEE89SvDZ_4P_szruMIOSA"/>
+<span class="text-label-md">Capital One</span>
+</button>
+<button class="flex flex-col items-center gap-sm p-md rounded-2xl hover:bg-surface-container transition-colors border border-transparent hover:border-outline-variant" onclick="nextStep(2)">
+<img alt="Amex" class="w-10 h-10 object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAjwZ5G1iJrc1x4PJxqNZKrsdF4-IVBBwkjB67Z0UagOo1RHdv3EAsjYpsIVi2p_KH-A3CWtezn4gi3Ph5UBWEhd_vQVopcC60F135ykK6izJ4k8vmABD03o34ZMTyHgQGw9JFPeVnI6fEa1rWxaoLLkCKDciu-L7wm0nja-7d870ZxQA8dw-qXSDLUNEQxG2K7edwtDVudL4WFLJH7LTnZzJPM5O6r7Mg7u8SeNiAboDZ9sUberr0Wu0j88rCxrd9hvk90p5gqK6VB"/>
+<span class="text-label-md">Amex</span>
+</button>
+</div>
+<p class="text-center text-label-sm text-outline">
+                        Don't see your bank? <a class="text-secondary font-bold hover:underline" href="#">View all institutions</a>
+</p>
+</div>
+<!-- Step 2: Login -->
+<div class="p-xl hidden" id="step2">
+<button class="flex items-center gap-xs text-secondary font-bold text-label-sm mb-lg hover:opacity-80" onclick="nextStep(1)">
+<span class="material-symbols-outlined text-[18px]" data-icon="arrow_back">arrow_back</span>
+                        Back to Selection
+                    </button>
+<div class="flex items-center gap-md mb-xl">
+<img alt="Chase" class="w-12 h-12 object-contain rounded-lg shadow-sm p-xs border border-outline-variant bg-white" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCtMc2jtrQsPV4tanGe7oycAvpSidRvohhPaim74weZxIzGlwD_k1PboxMg7WA_FjB20Sy-TK59fjqwjB570VnQGnPFmJuftIAwWruN1H2YTYayAF33xMs2y5w5yo_2A0siicIyHSrucqvlud23BvLMDkX13IydeMkNFpxjqen5gkHPITHIv7Yal4LpRSLHgf1zmX3s-3FLUGFH6BqvYxp-9s4uUVQnDAc0k_AdcFvRS1rGuvywVd4SfXc3jtFLEAkKnodWgTBofypf"/>
+<div>
+<h2 class="font-headline-md text-headline-md">Login to Chase</h2>
+<p class="text-label-sm text-on-surface-variant">Sign in with your bank credentials</p>
+</div>
+</div>
+<form class="space-y-lg" onsubmit="event.preventDefault(); nextStep(3);">
+<div>
+<label class="block text-label-sm font-bold text-on-surface-variant mb-sm">Username</label>
+<input class="w-full px-md py-md bg-surface-container border border-outline-variant rounded-xl focus:ring-2 focus:ring-secondary/20 focus:border-secondary outline-none transition-all" placeholder="Enter bank username" required="" type="text"/>
+</div>
+<div>
+<label class="block text-label-sm font-bold text-on-surface-variant mb-sm">Password</label>
+<input class="w-full px-md py-md bg-surface-container border border-outline-variant rounded-xl focus:ring-2 focus:ring-secondary/20 focus:border-secondary outline-none transition-all" placeholder="Enter bank password" required="" type="password"/>
+</div>
+<div class="flex items-center gap-sm p-md bg-surface-container-low rounded-xl border border-outline-variant/50">
+<span class="material-symbols-outlined text-outline" data-icon="info" style="font-variation-settings: 'opsz' 20;">info</span>
+<p class="text-label-sm text-on-surface-variant">FinTrack AI never stores your login credentials. Everything is encrypted end-to-end.</p>
+</div>
+<button class="w-full bg-secondary text-on-secondary py-lg rounded-xl font-bold hover:opacity-90 active:scale-[0.98] transition-all shadow-lg flex items-center justify-center gap-md" type="submit">
+                            Authorize Connection
+                            <span class="material-symbols-outlined" data-icon="lock" style="font-variation-settings: 'FILL' 1;">lock</span>
+</button>
+</form>
+</div>
+<!-- Step 3: Success -->
+<div class="p-3xl hidden text-center" id="step3">
+<div class="w-24 h-24 bg-on-tertiary-container/10 text-on-tertiary-container rounded-full flex items-center justify-center mx-auto mb-xl relative">
+<span class="material-symbols-outlined text-[48px]" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<div class="absolute inset-0 rounded-full border-4 border-on-tertiary-container border-t-transparent animate-spin opacity-20"></div>
+</div>
+<h2 class="font-headline-lg text-headline-lg mb-md">Connection Successful!</h2>
+<p class="text-on-surface-variant mb-2xl">Your Chase Checking account has been securely linked. We are now syncing your transaction history.</p>
+<div class="space-y-md">
+<button class="w-full bg-primary text-on-primary py-lg rounded-xl font-bold hover:opacity-90 active:scale-[0.98] transition-all" onclick="closeModal()">
+                            Go to Dashboard
+                        </button>
+<p class="text-label-sm text-outline">Syncing may take up to 2 minutes</p>
+</div>
+</div>
+<!-- Footer / Trust Badges -->
+<div class="px-xl py-lg bg-surface-container-low border-t border-outline-variant flex items-center justify-center gap-lg grayscale opacity-60">
+<div class="flex items-center gap-xs">
+<span class="material-symbols-outlined text-[16px]" data-icon="shield">shield</span>
+<span class="text-label-sm font-bold">AES-256</span>
+</div>
+<div class="flex items-center gap-xs">
+<span class="material-symbols-outlined text-[16px]" data-icon="policy">policy</span>
+<span class="text-label-sm font-bold">SOC2 COMPLIANT</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Side Navigation (Mobile/Tablet context hidden as per guidelines for this specific view focus) -->
+<!-- The prompt focuses on the Modal Overlay, but we've included the Shell as per 'Hierarchy' rules -->
+<script>
+        const modal = document.getElementById('bankModal');
+        const modalCard = document.getElementById('modalCard');
+        const steps = ['step1', 'step2', 'step3'];
+
+        function openModal() {
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modalCard.classList.remove('scale-95', 'opacity-0');
+                modalCard.classList.add('scale-100', 'opacity-100');
+            }, 50);
+            nextStep(1);
+        }
+
+        function closeModal() {
+            modalCard.classList.remove('scale-100', 'opacity-100');
+            modalCard.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        function nextStep(stepNumber) {
+            steps.forEach((stepId, index) => {
+                const element = document.getElementById(stepId);
+                if (index + 1 === stepNumber) {
+                    element.classList.remove('hidden');
+                    element.classList.add('animate-in', 'fade-in', 'duration-500');
+                } else {
+                    element.classList.add('hidden');
+                }
+            });
+        }
+
+        // Auto-open modal for demonstration since it's the core of the prompt
+        window.onload = () => {
+            setTimeout(openModal, 800);
+        };
+    </script>
+</body></html>

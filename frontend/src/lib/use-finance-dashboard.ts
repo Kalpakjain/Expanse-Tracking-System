@@ -2,8 +2,8 @@
 
 import { startTransition, useCallback, useEffect, useState } from "react";
 
-import { deleteTransaction, getCategories, getSummary, getTransactions } from "@/lib/api";
-import type { Category, DashboardSummary, Transaction } from "@/lib/types";
+import { deactivateAccount, deleteTransaction, getAccounts, getCategories, getSummary, getTransactions } from "@/lib/api";
+import type { Category, DashboardSummary, PaymentAccount, Transaction } from "@/lib/types";
 
 const fallbackSummary: DashboardSummary = {
   total_income: 0,
@@ -16,7 +16,9 @@ const fallbackSummary: DashboardSummary = {
 const fallbackTransactions: Transaction[] = [
   {
     id: "seed-transaction",
+    account_id: null,
     account_name: "Primary Wallet",
+    account_display_name: "Primary Wallet",
     category_id: "seed-category",
     category_name: "Food",
     type: "expense",
@@ -27,6 +29,23 @@ const fallbackTransactions: Transaction[] = [
     transaction_date: new Date().toISOString().slice(0, 10),
     payment_method: "UPI",
     notes: "Seed data for the dashboard preview",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+];
+
+const fallbackAccounts: PaymentAccount[] = [
+  {
+    id: "primary-wallet",
+    name: "Primary Wallet",
+    type: "wallet",
+    institution_name: "",
+    opening_balance: 0,
+    current_balance: -280,
+    currency_code: "INR",
+    color: "#0051D5",
+    is_default: true,
+    is_active: true,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
@@ -79,21 +98,25 @@ export function useFinanceDashboard() {
   const [summary, setSummary] = useState<DashboardSummary>(fallbackSummary);
   const [transactions, setTransactions] = useState<Transaction[]>(fallbackTransactions);
   const [categories, setCategories] = useState<Category[]>(fallbackCategories);
+  const [accounts, setAccounts] = useState<PaymentAccount[]>(fallbackAccounts);
   const [statusLabel, setStatusLabel] = useState("Using starter preview data while the API spins up.");
   const [deletingTransactionId, setDeletingTransactionId] = useState<string | null>(null);
+  const [deactivatingAccountId, setDeactivatingAccountId] = useState<string | null>(null);
 
   const loadDashboard = useCallback(async (successLabel?: string) => {
     try {
-      const [nextSummary, nextTransactions, nextCategories] = await Promise.all([
+      const [nextSummary, nextTransactions, nextCategories, nextAccounts] = await Promise.all([
         getSummary(),
         getTransactions(),
         getCategories(),
+        getAccounts(),
       ]);
 
       startTransition(() => {
         setSummary(nextSummary);
         setTransactions(nextTransactions.length ? nextTransactions : fallbackTransactions);
         setCategories(nextCategories.length ? nextCategories : fallbackCategories);
+        setAccounts(nextAccounts.length ? nextAccounts : fallbackAccounts);
         setStatusLabel(successLabel ?? "Connected to the FastAPI starter API.");
       });
     } catch {
@@ -123,13 +146,28 @@ export function useFinanceDashboard() {
     }
   }
 
+  async function removeAccount(accountId: string) {
+    setDeactivatingAccountId(accountId);
+    try {
+      await deactivateAccount(accountId);
+      await loadDashboard("Account deactivated and dashboard refreshed from the database.");
+    } catch {
+      setStatusLabel("Could not deactivate the account right now.");
+    } finally {
+      setDeactivatingAccountId(null);
+    }
+  }
+
   return {
     summary,
     transactions,
     categories,
+    accounts,
     statusLabel,
     deletingTransactionId,
+    deactivatingAccountId,
     loadDashboard,
     removeTransaction,
+    removeAccount,
   };
 }

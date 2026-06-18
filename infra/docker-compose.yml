@@ -19,8 +19,9 @@ services:
       APP_ENV: development
       APP_HOST: 0.0.0.0
       APP_PORT: 8000
-      FRONTEND_ORIGIN: http://localhost:3000
+      FRONTEND_ORIGINS: http://localhost:3000
       DATABASE_URL: postgresql://expense_user:expense_password@postgres:5432/expense_tracker
+      DATABASE_AUTO_CREATE_TABLES: "false"
       REDIS_URL: redis://redis:6379/0
     depends_on:
       - postgres
@@ -36,8 +37,6 @@ services:
       POSTGRES_PASSWORD: expense_password
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ../database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
-      - ../database/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
 
   redis:
     image: redis:7-alpine

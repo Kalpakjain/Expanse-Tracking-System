@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Bank Connections | FinTrack AI</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Plus+Jakarta+Sans:wght@100..900&display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .bank-card-hover {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .bank-card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0px 10px 15px -3px rgba(15, 23, 42, 0.08);
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-fixed": "#dae2fd",
+                        "tertiary-fixed-dim": "#4edea3",
+                        "surface-container-low": "#f2f4f6",
+                        "on-surface": "#191c1e",
+                        "on-secondary-fixed": "#00174b",
+                        "on-error-container": "#93000a",
+                        "surface-container-high": "#e6e8ea",
+                        "primary": "#000000",
+                        "on-background": "#191c1e",
+                        "surface-tint": "#565e74",
+                        "tertiary-fixed": "#6ffbbe",
+                        "primary-fixed-dim": "#bec6e0",
+                        "outline": "#76777d",
+                        "background": "#f7f9fb",
+                        "surface-dim": "#d8dadc",
+                        "inverse-surface": "#2d3133",
+                        "inverse-on-surface": "#eff1f3",
+                        "on-tertiary-fixed": "#002113",
+                        "on-secondary-fixed-variant": "#003ea8",
+                        "secondary": "#0051d5",
+                        "surface-container-highest": "#e0e3e5",
+                        "on-tertiary-fixed-variant": "#005236",
+                        "on-primary": "#ffffff",
+                        "primary-container": "#131b2e",
+                        "surface-container-lowest": "#ffffff",
+                        "inverse-primary": "#bec6e0",
+                        "error-container": "#ffdad6",
+                        "error": "#ba1a1a",
+                        "secondary-fixed-dim": "#b4c5ff",
+                        "on-primary-container": "#7c839b",
+                        "secondary-fixed": "#dbe1ff",
+                        "on-secondary-container": "#fefcff",
+                        "tertiary": "#000000",
+                        "on-primary-fixed": "#131b2e",
+                        "surface-container": "#eceef0",
+                        "on-surface-variant": "#45464d",
+                        "on-primary-fixed-variant": "#3f465c",
+                        "on-tertiary": "#ffffff",
+                        "surface-bright": "#f7f9fb",
+                        "on-error": "#ffffff",
+                        "surface-variant": "#e0e3e5",
+                        "secondary-container": "#316bf3",
+                        "on-secondary": "#ffffff",
+                        "tertiary-container": "#002113",
+                        "surface": "#f7f9fb",
+                        "on-tertiary-container": "#009668",
+                        "outline-variant": "#c6c6cd"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "sm": "8px",
+                        "lg": "24px",
+                        "xs": "4px",
+                        "base": "4px",
+                        "3xl": "64px",
+                        "container-max": "1280px",
+                        "gutter": "24px",
+                        "2xl": "48px",
+                        "xl": "32px",
+                        "md": "16px"
+                    },
+                    "fontFamily": {
+                        "display-lg": ["Plus Jakarta Sans"],
+                        "body-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-lg-mobile": ["Plus Jakarta Sans"],
+                        "headline-md": ["Plus Jakarta Sans"],
+                        "headline-lg": ["Plus Jakarta Sans"]
+                    },
+                    "fontSize": {
+                        "display-lg": ["48px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                        "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "label-sm": ["12px", {"lineHeight": "1.2", "fontWeight": "600"}],
+                        "label-md": ["14px", {"lineHeight": "1.4", "letterSpacing": "0.01em", "fontWeight": "500"}],
+                        "headline-lg-mobile": ["24px", {"lineHeight": "1.3", "fontWeight": "700"}],
+                        "headline-md": ["24px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                        "headline-lg": ["32px", {"lineHeight": "1.3", "letterSpacing": "-0.01em", "fontWeight": "700"}]
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface font-body-md overflow-x-hidden">
+<!-- SideNavBar Anchor -->
+<aside class="fixed left-0 top-0 h-full flex flex-col p-md z-40 bg-surface-container-lowest dark:bg-surface-dim border-r border-outline-variant dark:border-outline w-64 md:flex hidden">
+<div class="flex items-center gap-md px-md py-lg mb-xl">
+<div class="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center text-white">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">account_balance</span>
+</div>
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-on-surface dark:text-on-surface-variant leading-none">FinTrack</h1>
+<p class="text-[12px] text-on-surface-variant">Smart Expenses</p>
+</div>
+</div>
+<nav class="flex-1 flex flex-col gap-sm">
+<a class="flex items-center gap-md text-on-surface-variant dark:text-surface-variant px-md py-sm hover:bg-surface-container-high transition-colors rounded-lg" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-body-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant dark:text-surface-variant px-md py-sm hover:bg-surface-container-high transition-colors rounded-lg" href="#">
+<span class="material-symbols-outlined">receipt_long</span>
+<span class="font-body-md">Transactions</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant dark:text-surface-variant px-md py-sm hover:bg-surface-container-high transition-colors rounded-lg" href="#">
+<span class="material-symbols-outlined">account_balance_wallet</span>
+<span class="font-body-md">Budgets</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant dark:text-surface-variant px-md py-sm hover:bg-surface-container-high transition-colors rounded-lg" href="#">
+<span class="material-symbols-outlined">insights</span>
+<span class="font-body-md">Analytics</span>
+</a>
+<!-- Active State Logic: Mapping 'Bank Connections' intent to a relevant section, or adding as settings -->
+<div class="mt-md pt-md border-t border-outline-variant">
+<p class="px-md text-[10px] uppercase font-bold text-outline mb-sm">Tools</p>
+<a class="flex items-center gap-md bg-secondary-container dark:bg-secondary text-on-secondary-container dark:text-on-secondary rounded-lg px-md py-sm" href="#">
+<span class="material-symbols-outlined">link</span>
+<span class="font-body-md">Bank Connections</span>
+</a>
+</div>
+</nav>
+<button class="mt-xl bg-secondary text-on-secondary px-md py-sm rounded-lg flex items-center justify-center gap-sm font-label-md hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined">add</span>
+            Add Expense
+        </button>
+<div class="mt-auto flex flex-col gap-sm pt-md border-t border-outline-variant">
+<a class="flex items-center gap-md text-on-surface-variant dark:text-surface-variant px-md py-sm hover:bg-surface-container-high transition-colors rounded-lg" href="#">
+<span class="material-symbols-outlined">help</span>
+<span class="font-body-md">Help Center</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant dark:text-surface-variant px-md py-sm hover:bg-surface-container-high transition-colors rounded-lg" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-body-md">Logout</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="md:ml-64 min-h-screen">
+<!-- TopNavBar Anchor (Execution) -->
+<header class="sticky top-0 z-30 bg-surface dark:bg-on-surface border-b border-outline-variant dark:border-outline h-16">
+<div class="flex justify-between items-center w-full px-lg h-full max-w-container-max mx-auto">
+<div class="flex-1 flex items-center">
+<!-- Search Bar On Left -->
+<div class="relative w-full max-w-md group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="w-full bg-surface-container-low border-none rounded-lg pl-10 pr-4 py-2 text-label-md focus:ring-2 focus:ring-secondary/20 transition-all outline-none" placeholder="Search for your bank or institution..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-md ml-lg">
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container-low transition-colors cursor-pointer text-on-surface-variant">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container-low transition-colors cursor-pointer text-on-surface-variant">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<div class="h-8 w-[1px] bg-outline-variant mx-sm"></div>
+<img alt="User profile" class="w-8 h-8 rounded-full object-cover ring-2 ring-outline-variant" data-alt="A high-quality professional headshot of a smiling user in a minimalist office setting with soft natural lighting. The visual style is clean, modern, and high-fidelity, aligning with a premium fintech interface. The background is slightly blurred with muted slate and blue tones to maintain focus on the individual." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAfPWWtWoTgDczMhAq9pWZcDfKPhe9-urc-XBkTKNTMzv8kORUDOGy0XMkct7TI5MnUf78oU6r1-Io5c_zhycks8jyy6hXNn1bDp4HOtq0XFRPKiFoQZzIbXQv2FV6heJu1IyvINKEEbYXd8FebV791fRJzP9juy4_mNqgqH_0T5vElxeakjAGZJD5-2ni1TWVPkVRdkcyaM-2ROBX9pM6cnQ7zKuNJIHBJrdDywnmhGR5SZnCEiBZl2E3c2wmOfHlrAirYphagp1ml"/>
+</div>
+</div>
+</header>
+<!-- Page Content -->
+<div class="max-w-container-max mx-auto px-lg py-xl">
+<!-- Hero Header -->
+<section class="mb-3xl">
+<h2 class="font-display-lg text-display-lg text-on-surface mb-xs">Bank Connections</h2>
+<p class="text-body-lg text-on-surface-variant max-w-2xl">Link your accounts to automatically sync transactions, track spending in real-time, and get AI-powered financial insights.</p>
+</section>
+<!-- Connected Accounts Bento Grid -->
+<section class="mb-3xl">
+<div class="flex items-center justify-between mb-lg">
+<h3 class="font-headline-md text-headline-md text-on-surface">Connected Accounts</h3>
+<span class="text-label-md text-on-tertiary-container bg-tertiary-fixed rounded-full px-md py-1">2 Active Links</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-lg">
+<!-- Chase Card -->
+<div class="bg-surface-container-lowest border border-outline-variant p-lg rounded-xl bank-card-hover flex flex-col justify-between h-48 relative overflow-hidden group">
+<div class="absolute -right-4 -top-4 w-24 h-24 bg-secondary/5 rounded-full blur-2xl group-hover:bg-secondary/10 transition-colors"></div>
+<div class="flex justify-between items-start">
+<div class="flex items-center gap-md">
+<div class="w-12 h-12 rounded-lg bg-blue-900 flex items-center justify-center text-white">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">account_balance</span>
+</div>
+<div>
+<h4 class="font-headline-md text-body-lg font-bold">Chase Bank</h4>
+<p class="text-label-md text-outline">Primary Checking</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-tertiary-container">verified</span>
+</div>
+<div class="flex justify-between items-end">
+<div>
+<p class="text-label-sm text-outline uppercase tracking-wider">Last Sync</p>
+<p class="text-label-md font-medium">15 minutes ago</p>
+</div>
+<button class="bg-surface-container-high text-on-surface px-md py-2 rounded-lg text-label-md font-bold hover:bg-outline-variant transition-colors">Manage</button>
+</div>
+</div>
+<!-- Wells Fargo Card -->
+<div class="bg-surface-container-lowest border border-outline-variant p-lg rounded-xl bank-card-hover flex flex-col justify-between h-48 relative overflow-hidden group">
+<div class="absolute -right-4 -top-4 w-24 h-24 bg-error/5 rounded-full blur-2xl group-hover:bg-error/10 transition-colors"></div>
+<div class="flex justify-between items-start">
+<div class="flex items-center gap-md">
+<div class="w-12 h-12 rounded-lg bg-red-700 flex items-center justify-center text-white">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">savings</span>
+</div>
+<div>
+<h4 class="font-headline-md text-body-lg font-bold">Wells Fargo</h4>
+<p class="text-label-md text-outline">Savings Account</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-tertiary-container">verified</span>
+</div>
+<div class="flex justify-between items-end">
+<div>
+<p class="text-label-sm text-outline uppercase tracking-wider">Last Sync</p>
+<p class="text-label-md font-medium">2 hours ago</p>
+</div>
+<button class="bg-surface-container-high text-on-surface px-md py-2 rounded-lg text-label-md font-bold hover:bg-outline-variant transition-colors">Manage</button>
+</div>
+</div>
+<!-- Add New Visual Card -->
+<button class="border-2 border-dashed border-outline-variant rounded-xl p-lg flex flex-col items-center justify-center gap-md text-outline hover:border-secondary hover:text-secondary hover:bg-secondary/5 transition-all group h-48">
+<div class="w-12 h-12 rounded-full border-2 border-dashed border-current flex items-center justify-center group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined">add_link</span>
+</div>
+<span class="font-label-md font-bold">Connect New Bank</span>
+</button>
+</div>
+</section>
+<!-- Popular Institutions List/Grid -->
+<section class="mb-3xl">
+<div class="flex items-center justify-between mb-lg">
+<h3 class="font-headline-md text-headline-md text-on-surface">Popular Institutions</h3>
+<button class="text-secondary font-label-md font-bold flex items-center gap-xs hover:underline">
+                        View All
+                        <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-md">
+<!-- Bank Of America -->
+<div class="bg-surface-container-lowest border border-outline-variant p-md rounded-lg flex flex-col items-center gap-sm cursor-pointer bank-card-hover group">
+<div class="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center border border-outline-variant group-hover:border-secondary/20 transition-colors">
+<span class="material-symbols-outlined text-3xl text-blue-800">domain</span>
+</div>
+<span class="font-label-md font-bold text-center">Bank of America</span>
+</div>
+<!-- Citibank -->
+<div class="bg-surface-container-lowest border border-outline-variant p-md rounded-lg flex flex-col items-center gap-sm cursor-pointer bank-card-hover group">
+<div class="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center border border-outline-variant group-hover:border-secondary/20 transition-colors">
+<span class="material-symbols-outlined text-3xl text-cyan-600">credit_card</span>
+</div>
+<span class="font-label-md font-bold text-center">Citibank</span>
+</div>
+<!-- Capital One -->
+<div class="bg-surface-container-lowest border border-outline-variant p-md rounded-lg flex flex-col items-center gap-sm cursor-pointer bank-card-hover group">
+<div class="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center border border-outline-variant group-hover:border-secondary/20 transition-colors">
+<span class="material-symbols-outlined text-3xl text-blue-900">payments</span>
+</div>
+<span class="font-label-md font-bold text-center">Capital One</span>
+</div>
+<!-- American Express -->
+<div class="bg-surface-container-lowest border border-outline-variant p-md rounded-lg flex flex-col items-center gap-sm cursor-pointer bank-card-hover group">
+<div class="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center border border-outline-variant group-hover:border-secondary/20 transition-colors">
+<span class="material-symbols-outlined text-3xl text-blue-400">workspace_premium</span>
+</div>
+<span class="font-label-md font-bold text-center">American Express</span>
+</div>
+<!-- Fidelity -->
+<div class="bg-surface-container-lowest border border-outline-variant p-md rounded-lg flex flex-col items-center gap-sm cursor-pointer bank-card-hover group">
+<div class="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center border border-outline-variant group-hover:border-secondary/20 transition-colors">
+<span class="material-symbols-outlined text-3xl text-green-700">trending_up</span>
+</div>
+<span class="font-label-md font-bold text-center">Fidelity</span>
+</div>
+</div>
+</section>
+<!-- Security Trust Bar -->
+<section class="mt-3xl pt-2xl border-t border-outline-variant">
+<div class="bg-secondary-container/30 rounded-2xl p-xl flex flex-col md:flex-row items-center gap-xl">
+<div class="w-16 h-16 rounded-full bg-white flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined text-secondary text-3xl" style="font-variation-settings: 'FILL' 1;">encrypted</span>
+</div>
+<div class="flex-1 text-center md:text-left">
+<h4 class="font-headline-md text-body-lg font-bold text-on-secondary-fixed-variant">Secure Connection Protocol</h4>
+<p class="text-body-md text-on-surface-variant">Your privacy is our top priority. We use bank-level AES 256-bit encryption to protect your data. FinTrack AI never stores your login credentials and only receives read-only access to your transactions.</p>
+</div>
+<div class="flex gap-md">
+<div class="px-md py-sm bg-white rounded-lg border border-outline-variant flex items-center gap-sm">
+<span class="material-symbols-outlined text-emerald-600">shield_with_heart</span>
+<span class="text-label-sm font-bold uppercase">SOC2 Type II</span>
+</div>
+<div class="px-md py-sm bg-white rounded-lg border border-outline-variant flex items-center gap-sm">
+<span class="material-symbols-outlined text-emerald-600">lock</span>
+<span class="text-label-sm font-bold uppercase">SSL Verified</span>
+</div>
+</div>
+</div>
+</section>
+</div>
+</main>
+<!-- Mobile Bottom Navigation Shell (Filter Logic: Top-level destination) -->
+<nav class="md:hidden fixed bottom-0 left-0 right-0 bg-surface border-t border-outline-variant px-md h-16 flex items-center justify-around z-50">
+<a class="flex flex-col items-center gap-xs text-on-surface-variant" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="text-[10px] font-medium">Dash</span>
+</a>
+<a class="flex flex-col items-center gap-xs text-on-surface-variant" href="#">
+<span class="material-symbols-outlined">receipt_long</span>
+<span class="text-[10px] font-medium">Trans</span>
+</a>
+<a class="flex flex-col items-center gap-xs text-secondary" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">link</span>
+<span class="text-[10px] font-bold">Banks</span>
+</a>
+<a class="flex flex-col items-center gap-xs text-on-surface-variant" href="#">
+<span class="material-symbols-outlined">insights</span>
+<span class="text-[10px] font-medium">Stats</span>
+</a>
+<a class="flex flex-col items-center gap-xs text-on-surface-variant" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-[10px] font-medium">Set</span>
+</a>
+</nav>
+<script>
+        // Simple search interactivity
+        const searchInput = document.querySelector('input[type="text"]');
+        searchInput.addEventListener('focus', () => {
+            searchInput.parentElement.classList.add('ring-2', 'ring-secondary/20');
+        });
+        searchInput.addEventListener('blur', () => {
+            searchInput.parentElement.classList.remove('ring-2', 'ring-secondary/20');
+        });
+
+        // Bank card click visual feedback
+        const cards = document.querySelectorAll('.bank-card-hover');
+        cards.forEach(card => {
+            card.addEventListener('mousedown', () => {
+                card.style.transform = 'scale(0.98)';
+            });
+            card.addEventListener('mouseup', () => {
+                card.style.transform = 'translateY(-2px)';
+            });
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'translateY(0)';
+            });
+        });
+    </script>
+</body></html>

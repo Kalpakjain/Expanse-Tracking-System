@@ -1,0 +1,5 @@
+node_modules/
+.next/
+.next_stale_cache/
+npm-debug.log*
+.env.local

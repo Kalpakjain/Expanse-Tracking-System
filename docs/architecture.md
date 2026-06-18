@@ -2,7 +2,7 @@
 
 ## High-Level Goal
 
-Create a modular expense tracking system that starts simple and grows into an AI-assisted finance product without forcing a rewrite later.
+Create a modular expense tracking system that starts simple, works well in Indian rupees, and grows into an AI-assisted finance product without forcing a rewrite later.
 
 ## System Overview
 
@@ -29,6 +29,7 @@ FastAPI also connects to:
 - transaction forms
 - category and budget management
 - dashboards and charts
+- WhatsApp preference management
 - receipt upload UI
 - smart suggestions and alerts
 
@@ -38,6 +39,7 @@ FastAPI also connects to:
 - transaction CRUD APIs
 - budget logic
 - reporting APIs
+- notification-preference APIs
 - OCR job orchestration
 - AI suggestion endpoints
 - recurring transaction detection
@@ -61,7 +63,8 @@ FastAPI also connects to:
 
 - normalized financial records
 - audit-friendly timestamps
-- clear ownership by user id
+- category, budget, and notification settings persistence
+- easy path from SQLite development to PostgreSQL deployment
 
 ### Worker Layer
 
@@ -88,6 +91,7 @@ FastAPI also connects to:
 - `/transactions`
 - `/budgets`
 - `/reports`
+- `/settings/notifications`
 - `/receipts`
 - `/insights`
 - `/alerts`

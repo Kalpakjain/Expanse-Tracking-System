@@ -1,6 +1,6 @@
 COMPOSE_FILE=infra/docker-compose.yml
 
-.PHONY: up down logs backend-dev frontend-dev
+.PHONY: up down logs backend-dev frontend-dev backend-check backend-test backend-migrate frontend-build ci
 
 up:
 	docker compose -f $(COMPOSE_FILE) up --build
@@ -16,3 +16,17 @@ backend-dev:
 
 frontend-dev:
 	cd frontend && npm run dev
+
+backend-check:
+	cd backend && ./.venv/bin/python -m compileall app tests
+
+backend-test:
+	cd backend && ./.venv/bin/python -m pytest
+
+backend-migrate:
+	cd backend && ./.venv/bin/alembic upgrade head
+
+frontend-build:
+	cd frontend && npm run build
+
+ci: backend-check backend-test frontend-build

@@ -1,49 +1,39 @@
 # Database Schema
 
-## Design Principles
+This document reflects the user-scoped schema currently implemented in Alembic and mirrored by [database/schema.sql](../database/schema.sql).
 
-- every transaction belongs to a user
-- accounts and categories are user-scoped
-- receipts are linked to transactions when available
-- keep enough metadata for future automation and analytics
-
-## Core Tables
+## Current Tables
 
 ### users
 
+Purpose:
+Store account identities and password hashes.
+
+Fields:
+
 ```text
 id
-full_name
 email
+full_name
 password_hash
-currency_code
-timezone
-created_at
-updated_at
-```
-
-### accounts
-
-```text
-id
-user_id
-name
-type              # cash, bank, credit_card, wallet
-institution_name
-current_balance
-currency_code
 is_active
+is_demo
 created_at
 updated_at
 ```
 
 ### categories
 
+Purpose:
+Store reusable income and expense buckets. Default categories can be global, while custom categories can belong to a user.
+
+Fields:
+
 ```text
 id
 user_id
 name
-type              # expense or income
+type                    # expense or income
 color
 icon
 is_default
@@ -53,26 +43,34 @@ updated_at
 
 ### transactions
 
+Purpose:
+Store the core money ledger.
+
+Fields:
+
 ```text
 id
 user_id
-account_id
+account_name
 category_id
-type              # expense or income
+type                    # expense or income
 amount
 currency_code
 merchant_name
 description
 transaction_date
 payment_method
-location
 notes
-receipt_status
 created_at
 updated_at
 ```
 
 ### budgets
+
+Purpose:
+Track monthly limits for expense categories in INR.
+
+Fields:
 
 ```text
 id
@@ -81,82 +79,97 @@ category_id
 month
 year
 limit_amount
+currency_code
 alert_threshold_percent
-created_at
-updated_at
-```
-
-### receipts
-
-```text
-id
-user_id
-transaction_id
-file_url
-ocr_raw_text
-ocr_status
-parsed_merchant
-parsed_total
-parsed_date
-created_at
-updated_at
-```
-
-### recurring_rules
-
-```text
-id
-user_id
-merchant_name
-category_id
-expected_amount
-frequency
-last_detected_at
 is_active
 created_at
 updated_at
 ```
 
-### alerts
+Rules:
+
+- one budget per category per month per year
+- budgets are intended for expense categories only
+
+### receipts
+
+Purpose:
+Store uploaded receipt metadata and review-ready extraction hints.
+
+Fields:
 
 ```text
 id
 user_id
-type
-title
-message
+file_name
+content_type
+file_size
 status
-triggered_at
-read_at
+extracted_text
+merchant_name
+suggested_amount
+suggested_category_id
+confidence_score
 created_at
+updated_at
 ```
 
-### ai_suggestions
+### notification_preferences
+
+Purpose:
+Store WhatsApp and digest preferences for future scheduled delivery.
+
+Fields:
 
 ```text
 id
 user_id
-transaction_id
-suggestion_type
-suggested_value
-confidence_score
-source
-applied
+phone_number
+daily_digest_enabled
+budget_alerts_enabled
+weekly_report_enabled
+preferred_send_hour
+timezone
+currency_code
 created_at
+updated_at
 ```
 
-## Example Relationships
+## Current Relationships
 
-- one user has many accounts
-- one user has many categories
-- one account has many transactions
+- one user has many transactions, budgets, receipts, and notification preferences
 - one category has many transactions
-- one transaction may have one receipt
-- one transaction may have many AI suggestions over time
+- one category has many budgets
+- global default categories can be shared by all users
+- user-created categories belong to one user
 
-## Future-Friendly Extensions
+## Seeded Defaults
 
-- tags table for flexible labels
-- teams or households for shared finance
-- bank_sync_connections for external providers
-- audit_log for sensitive actions
+The seed data currently creates:
+
+- one demo user
+- default categories for Food, Transport, Bills, and Salary
+- one sample INR expense transaction for the demo user
+- one sample monthly Food budget for the demo user
+- one default notification-preferences row for the demo user
+
+## Planned Next Tables
+
+These are part of the longer-term design but are not implemented yet:
+
+- `accounts`
+- `recurring_rules`
+- `alerts`
+- `ai_suggestions`
+- `audit_log`
+
+## Migration Direction
+
+Alembic now owns production schema changes.
+
+```bash
+cd backend
+alembic upgrade head
+```
+
+SQLite local development can still use SQLAlchemy auto-create behavior for fast iteration.

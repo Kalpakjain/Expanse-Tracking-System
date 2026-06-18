@@ -1,19 +1,67 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
+
+import {
+  getNotificationPreferences,
+  updateNotificationPreferences,
+} from "@/lib/api";
+import type { NotificationPreferencesInput } from "@/lib/types";
 
 export function WhatsAppWorkspace() {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [dailyDigest, setDailyDigest] = useState(true);
   const [budgetAlerts, setBudgetAlerts] = useState(true);
+  const [weeklyReport, setWeeklyReport] = useState(false);
+  const [preferredSendHour, setPreferredSendHour] = useState("20");
+  const [timezone, setTimezone] = useState("Asia/Kolkata");
+  const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState(
-    "Frontend section ready. Backend delivery wiring can come next."
+    "Loading your saved WhatsApp notification preferences..."
   );
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  useEffect(() => {
+    async function loadPreferences() {
+      try {
+        const preferences = await getNotificationPreferences();
+        setPhoneNumber(preferences.phone_number);
+        setDailyDigest(preferences.daily_digest_enabled);
+        setBudgetAlerts(preferences.budget_alerts_enabled);
+        setWeeklyReport(preferences.weekly_report_enabled);
+        setPreferredSendHour(String(preferences.preferred_send_hour));
+        setTimezone(preferences.timezone);
+        setMessage("Saved settings loaded from the backend.");
+      } catch {
+        setMessage("Could not load settings yet. You can still save new ones.");
+      }
+    }
+
+    void loadPreferences();
+  }, []);
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setMessage("Notification preferences saved in the UI concept. Backend integration is next.");
+    setIsSaving(true);
+    setMessage("Saving WhatsApp preferences...");
+
+    try {
+      const payload: NotificationPreferencesInput = {
+        phone_number: phoneNumber,
+        daily_digest_enabled: dailyDigest,
+        budget_alerts_enabled: budgetAlerts,
+        weekly_report_enabled: weeklyReport,
+        preferred_send_hour: Number(preferredSendHour),
+        timezone,
+        currency_code: "INR",
+      };
+      await updateNotificationPreferences(payload);
+      setMessage("Notification preferences saved to the backend.");
+    } catch {
+      setMessage("Could not save notification preferences right now.");
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   return (
@@ -32,8 +80,8 @@ export function WhatsAppWorkspace() {
           <div className="hero-card side-card">
             <h2>Current stage</h2>
             <p>
-              The front-end settings experience is ready. The next backend step will be provider
-              integration and scheduled messaging.
+              Preference storage is live. The next backend step is scheduled delivery and WhatsApp
+              provider integration.
             </p>
           </div>
         </aside>
@@ -75,9 +123,41 @@ export function WhatsAppWorkspace() {
               <span>Send alerts when a category crosses its limit</span>
             </label>
 
+            <label className="toggle-row">
+              <input
+                checked={weeklyReport}
+                onChange={(event) => setWeeklyReport(event.target.checked)}
+                type="checkbox"
+              />
+              <span>Send a weekly financial summary</span>
+            </label>
+
+            <div className="field-row">
+              <label className="field">
+                <span className="field-label">Preferred send hour</span>
+                <input
+                  className="field-input"
+                  type="number"
+                  min="0"
+                  max="23"
+                  value={preferredSendHour}
+                  onChange={(event) => setPreferredSendHour(event.target.value)}
+                />
+              </label>
+
+              <label className="field">
+                <span className="field-label">Timezone</span>
+                <input
+                  className="field-input"
+                  value={timezone}
+                  onChange={(event) => setTimezone(event.target.value)}
+                />
+              </label>
+            </div>
+
             <div className="form-actions">
-              <button className="button button-primary" type="submit">
-                Save notification settings
+              <button className="button button-primary" type="submit" disabled={isSaving}>
+                {isSaving ? "Saving..." : "Save notification settings"}
               </button>
               <span className="form-message">{message}</span>
             </div>

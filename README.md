@@ -1,38 +1,66 @@
 # Smart Expense Tracker
 
-A practical blueprint for building a smart expense tracker with manual expense management first and AI-assisted features added in phases.
+An INR-first full-stack expense tracker that starts with reliable manual finance operations and grows into budgeting, notifications, OCR, and AI-assisted insights.
 
 ## Current Status
 
-The repository now includes an initial implementation scaffold:
+The repository now includes a working product foundation:
 
-- `frontend/`: Next.js starter dashboard
-- `backend/`: FastAPI starter API
-- `database/`: PostgreSQL schema and seed starter
-- `infra/`: Docker Compose setup
-- `docs/`: product and engineering blueprint
+- `frontend/`: multi-page Next.js experience for home, categories, reports, notifications, and about
+- `backend/`: FastAPI API with categories, transactions, budgets, report overview, and notification settings
+- `database/`: PostgreSQL reference schema and seed files aligned with the current MVP
+- `infra/`: Docker-based local and deployment-friendly runtime
+- `docs/`: architecture, roadmap, project layers, deployment, and workflow guides
 
-The first real MVP slice is now underway:
+The current MVP foundation already includes:
 
 - database-backed categories and transactions
 - seeded starter data for first-run experience
 - dashboard reads from the API when available
 - add-expense form wired to the backend flow
+- signup/login API with bearer-token sessions
+- user-scoped transactions, budgets, receipts, and notification settings
 - category creation from the dashboard
 - transaction deletion from the dashboard
 - multi-section frontend navigation for home, categories, reports, WhatsApp notifications, and about
+- monthly rupee budgets with backend persistence
+- report overview with category breakdown and budget utilization
+- persisted WhatsApp notification preferences
+- backend-generated smart insights for reports
+- receipt upload workflow with review-ready OCR/category suggestions
+- Stitch-inspired bank connections and savings transfer pages
+- health and readiness checks for deployment probes
+- production-oriented Dockerfiles and GitHub Actions CI
+- Alembic migrations for production database setup
 
 ## Vision
 
 Build a secure expense tracker that helps users:
 
 - record income and expenses
-- manage categories and budgets
+- manage categories and rupee-based budgets
 - view dashboards and reports
 - upload receipts
 - get smart category suggestions
 - detect unusual spending patterns
 - receive budget alerts
+
+## Product Layers
+
+1. `Capture Layer`
+Transaction logging, categories, payment context, and clean bookkeeping.
+
+2. `Control Layer`
+Budgets, category-based reports, and monthly spending review in INR.
+
+3. `Automation Layer`
+WhatsApp preferences, scheduled digests, and budget alert plumbing.
+
+4. `Intelligence Layer`
+Receipt OCR, AI categorization, anomaly detection, and natural-language insights.
+
+5. `Platform Layer`
+Docker, CI, managed infrastructure, secrets, and public deployment.
 
 ## Product Phases
 
@@ -65,7 +93,7 @@ Build a secure expense tracker that helps users:
 
 ## Recommended Stack
 
-- Frontend: Next.js 15, React 19, TypeScript, Tailwind CSS
+- Frontend: Next.js 15, React 19, TypeScript
 - Backend: FastAPI, Python 3.12
 - Database: PostgreSQL 18
 - ORM: SQLModel or SQLAlchemy
@@ -75,7 +103,7 @@ Build a secure expense tracker that helps users:
 - OCR: Tesseract initially, optional upgrade to Google Vision or AWS Textract
 - Charts: Recharts
 - Auth: JWT with refresh tokens or managed auth later
-- DevOps: Docker, GitHub Actions, Vercel for frontend, Railway/Render/AWS for backend
+- DevOps: Docker, GitHub Actions, platform-neutral container deployment
 
 ## Suggested Repository Structure
 
@@ -113,11 +141,13 @@ cd backend
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -e .
+alembic upgrade head
 python -m uvicorn app.main:app --reload
 ```
 
 The backend uses SQLite by default for local development, so you can get moving without setting up Postgres first.
-Docker still uses PostgreSQL 18 through [infra/docker-compose.yml](./infra/docker-compose.yml).
+Docker uses PostgreSQL 18 through [infra/docker-compose.yml](./infra/docker-compose.yml).
+Local SQLite auto-creates tables by default; hosted/PostgreSQL environments should use Alembic migrations.
 
 Frontend:
 
@@ -130,12 +160,44 @@ npm run dev
 ## First Working Endpoints
 
 - `GET /health`
+- `GET /ready`
+- `POST /api/v1/auth/register`
+- `POST /api/v1/auth/login`
+- `GET /api/v1/auth/me`
 - `GET /api/v1/categories`
 - `POST /api/v1/categories`
 - `GET /api/v1/transactions`
 - `POST /api/v1/transactions`
 - `DELETE /api/v1/transactions/{transaction_id}`
 - `GET /api/v1/reports/summary`
+- `GET /api/v1/reports/overview`
+- `GET /api/v1/budgets`
+- `POST /api/v1/budgets`
+- `DELETE /api/v1/budgets/{budget_id}`
+- `GET /api/v1/settings/notifications`
+- `PUT /api/v1/settings/notifications`
+- `GET /api/v1/receipts`
+- `POST /api/v1/receipts`
+
+## Deployment Readiness
+
+The repository is now set up so we can ship it with:
+
+- a production Next.js container
+- a production FastAPI container
+- PostgreSQL and Redis wiring for hosted environments
+- Alembic migrations for production schema setup
+- a CI workflow that builds frontend and backend on every push or PR
+- production config validation for auth secrets, CORS origins, and migration-based database setup
+
+To make the app truly public, we still need real deployment credentials and runtime secrets for:
+
+- the frontend public URL
+- backend public URL and allowed frontend origins
+- PostgreSQL
+- Redis
+- future WhatsApp provider credentials
+- future object storage credentials for receipts
 
 ## Initial Build Order
 
@@ -165,6 +227,8 @@ npm run dev
 
 - [Architecture](./docs/architecture.md)
 - [Database Schema](./docs/database-schema.md)
+- [Product Layers](./docs/product-layers.md)
+- [Deployment Guide](./docs/deployment.md)
 - [Roadmap](./docs/roadmap.md)
 - [GitHub Workflow](./docs/github-workflow.md)
 

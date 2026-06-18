@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Bank Linked Successfully - FinTrack AI</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-container": "#002113",
+                        "on-primary-fixed-variant": "#3f465c",
+                        "surface-container-low": "#f2f4f6",
+                        "surface-variant": "#e0e3e5",
+                        "secondary-fixed-dim": "#b4c5ff",
+                        "on-tertiary-container": "#009668",
+                        "tertiary": "#000000",
+                        "secondary-container": "#316bf3",
+                        "outline": "#76777d",
+                        "on-primary-container": "#7c839b",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-tint": "#565e74",
+                        "inverse-surface": "#2d3133",
+                        "surface-dim": "#d8dadc",
+                        "outline-variant": "#c6c6cd",
+                        "error-container": "#ffdad6",
+                        "primary-fixed-dim": "#bec6e0",
+                        "on-secondary-fixed": "#00174b",
+                        "surface-container": "#eceef0",
+                        "surface": "#f7f9fb",
+                        "on-error-container": "#93000a",
+                        "background": "#f7f9fb",
+                        "primary": "#000000",
+                        "secondary-fixed": "#dbe1ff",
+                        "primary-container": "#131b2e",
+                        "on-tertiary": "#ffffff",
+                        "tertiary-fixed-dim": "#4edea3",
+                        "on-secondary": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "inverse-on-surface": "#eff1f3",
+                        "on-background": "#191c1e",
+                        "inverse-primary": "#bec6e0",
+                        "secondary": "#0051d5",
+                        "surface-bright": "#f7f9fb",
+                        "on-secondary-container": "#fefcff",
+                        "surface-container-high": "#e6e8ea",
+                        "on-tertiary-fixed": "#002113",
+                        "tertiary-fixed": "#6ffbbe",
+                        "error": "#ba1a1a",
+                        "primary-fixed": "#dae2fd",
+                        "on-surface": "#191c1e",
+                        "on-secondary-fixed-variant": "#003ea8",
+                        "surface-container-highest": "#e0e3e5",
+                        "on-tertiary-fixed-variant": "#005236",
+                        "on-surface-variant": "#45464d",
+                        "on-primary-fixed": "#131b2e",
+                        "on-error": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "container-max": "1280px",
+                        "3xl": "64px",
+                        "gutter": "24px",
+                        "base": "4px",
+                        "sm": "8px",
+                        "lg": "24px",
+                        "2xl": "48px",
+                        "md": "16px",
+                        "xs": "4px",
+                        "xl": "32px"
+                    },
+                    "fontFamily": {
+                        "headline-lg-mobile": ["Plus Jakarta Sans"],
+                        "headline-lg": ["Plus Jakarta Sans"],
+                        "body-lg": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-md": ["Plus Jakarta Sans"],
+                        "body-md": ["Inter"],
+                        "display-lg": ["Plus Jakarta Sans"]
+                    },
+                    "fontSize": {
+                        "headline-lg-mobile": ["24px", {"lineHeight": "1.3", "fontWeight": "700"}],
+                        "headline-lg": ["32px", {"lineHeight": "1.3", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                        "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "label-sm": ["12px", {"lineHeight": "1.2", "fontWeight": "600"}],
+                        "label-md": ["14px", {"lineHeight": "1.4", "letterSpacing": "0.01em", "fontWeight": "500"}],
+                        "headline-md": ["24px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                        "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                        "display-lg": ["48px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        .animate-float { animation: float 3s ease-in-out infinite; }
+        .confetti-piece {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 2px;
+            animation: fall 3s linear infinite;
+        }
+        @keyframes fall {
+            to { transform: translateY(100vh) rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body-md min-h-screen flex flex-col items-center justify-center overflow-hidden">
+<!-- Confetti Background Layer -->
+<div class="fixed inset-0 pointer-events-none z-0" id="confetti-container"></div>
+<!-- Main Success Container -->
+<main class="relative z-10 w-full max-w-[560px] px-lg">
+<div class="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant p-xl md:p-2xl flex flex-col items-center text-center">
+<!-- Celebration Graphic / Icon -->
+<div class="relative mb-xl">
+<div class="w-24 h-24 bg-tertiary-fixed text-on-tertiary-fixed rounded-full flex items-center justify-center animate-float shadow-lg shadow-tertiary-fixed/20">
+<span class="material-symbols-outlined text-[48px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<!-- Sparkle Accents -->
+<span class="material-symbols-outlined absolute -top-2 -right-2 text-secondary animate-pulse" style="font-variation-settings: 'FILL' 1;">spark</span>
+<span class="material-symbols-outlined absolute bottom-0 -left-4 text-tertiary-fixed-dim animate-pulse delay-75" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+</div>
+<!-- Heading -->
+<h1 class="font-headline-lg text-headline-lg text-on-surface mb-sm">Bank Successfully Linked!</h1>
+<p class="font-body-md text-on-surface-variant mb-xl max-w-[400px]">Your financial data is now securely synced with FinTrack AI. Let's get your dashboard ready.</p>
+<!-- Linked Institution Summary Card -->
+<div class="w-full bg-surface-container-low rounded-lg p-md border border-outline-variant flex items-center gap-md mb-xl transition-all hover:border-secondary/30">
+<div class="w-12 h-12 bg-surface-container-highest rounded-lg flex items-center justify-center overflow-hidden">
+<img alt="Chase Bank" class="w-8 h-8 object-contain" data-alt="A professional logo of Chase Bank displayed on a clean white background. The image is a crisp vector style, fitting a modern fintech user interface, with high contrast and minimalist presentation to signify banking security and trust." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCx-AAylnLyuVv5FMdlBxNZPzgwddLuCJuV4apnnqg5E1276eK-1fE46Y9Jso96H5_QHzep33ZzYJIWzOQ0aXqKcQqjb57JDoNRn_XsXEGSqG2jdHQPqFuOVt6ftjKv5ZmGrHknn_T4GYQ80S6247QafcTiFastUmLXQbuUfZ_8R8N0o0H14SXg3QZp85mjdkTXlMIyzVf9MwZm8q-RHQY-p0VNWiZDcCOxXiuvQsShSMW-bRZwUlOA-olAQ6OeAs2dPNeiOKkAGsV6"/>
+</div>
+<div class="text-left flex-1">
+<h3 class="font-headline-md text-headline-md leading-tight text-on-surface">Chase Bank</h3>
+<p class="font-label-md text-label-md text-on-surface-variant">Checking Account •••• 4829</p>
+</div>
+<div class="px-sm py-1 bg-tertiary-fixed text-on-tertiary-fixed font-label-sm text-label-sm rounded-full">
+                    ACTIVE
+                </div>
+</div>
+<!-- Success Checklist / What's Next -->
+<div class="w-full text-left mb-2xl">
+<h4 class="font-label-md text-label-md font-bold text-on-surface mb-md">WHAT'S HAPPENING NOW</h4>
+<div class="space-y-md">
+<!-- Step 1 -->
+<div class="flex items-start gap-md">
+<div class="mt-1 flex-shrink-0">
+<div class="w-5 h-5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed flex items-center justify-center">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">check</span>
+</div>
+</div>
+<div>
+<p class="font-body-md text-on-surface font-semibold leading-none mb-1">Syncing transactions</p>
+<p class="font-label-md text-label-md text-on-surface-variant">We're pulling your last 90 days of spending history.</p>
+</div>
+</div>
+<!-- Step 2 -->
+<div class="flex items-start gap-md">
+<div class="mt-1 flex-shrink-0">
+<div class="w-5 h-5 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center animate-pulse">
+<span class="material-symbols-outlined text-[14px]">sync</span>
+</div>
+</div>
+<div>
+<p class="font-body-md text-on-surface font-semibold leading-none mb-1">Analyzing spending</p>
+<p class="font-label-md text-label-md text-on-surface-variant">AI is categorizing your expenses and finding patterns.</p>
+</div>
+</div>
+<!-- Step 3 -->
+<div class="flex items-start gap-md">
+<div class="mt-1 flex-shrink-0">
+<div class="w-5 h-5 rounded-full border border-outline-variant flex items-center justify-center">
+<div class="w-1.5 h-1.5 rounded-full bg-outline"></div>
+</div>
+</div>
+<div>
+<p class="font-body-md text-on-surface leading-none mb-1">Personalized Budgets</p>
+<p class="font-label-md text-label-md text-on-surface-variant">You'll be able to set new limits in the Budget tab.</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Action Buttons -->
+<div class="w-full flex flex-col gap-md">
+<button class="w-full bg-secondary text-on-secondary font-headline-md text-headline-md py-md rounded-lg shadow-md hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-sm" onclick="window.location.href='#dashboard'">
+                    Go to Dashboard
+                    <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+<button class="w-full bg-surface-container text-on-surface font-label-md text-label-md py-md rounded-lg hover:bg-surface-container-high transition-colors active:scale-[0.98]" onclick="window.location.href='#add-bank'">
+                    Add Another Bank
+                </button>
+</div>
+<p class="mt-xl font-label-sm text-label-sm text-outline flex items-center gap-xs">
+<span class="material-symbols-outlined text-[16px]">lock</span>
+                Bank-grade 256-bit AES encryption secured
+            </p>
+</div>
+<!-- Footer Subtle Branding -->
+<div class="mt-xl flex items-center justify-center gap-sm opacity-60">
+<span class="font-headline-md text-headline-md font-bold text-primary">FinTrack</span>
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+<span class="font-label-md text-label-md text-on-surface-variant">Smart Expenses</span>
+</div>
+</main>
+<script>
+        // Simple confetti effect for celebration
+        function createConfetti() {
+            const container = document.getElementById('confetti-container');
+            const colors = ['#316bf3', '#6ffbbe', '#b4c5ff', '#0051d5', '#4edea3'];
+            
+            for (let i = 0; i < 50; i++) {
+                const confetti = document.createElement('div');
+                confetti.classList.add('confetti-piece');
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.animationDelay = Math.random() * 3 + 's';
+                confetti.style.opacity = Math.random();
+                confetti.style.width = (Math.random() * 6 + 4) + 'px';
+                confetti.style.height = confetti.style.width;
+                container.appendChild(confetti);
+            }
+        }
+
+        // Initialize micro-interactions
+        window.addEventListener('DOMContentLoaded', () => {
+            createConfetti();
+            
+            // Clean up old confetti after some time to save memory
+            setTimeout(() => {
+                const container = document.getElementById('confetti-container');
+                if (container) container.innerHTML = '';
+            }, 6000);
+        });
+    </script>
+</body></html>

@@ -8,8 +8,9 @@ from pydantic import BaseModel, ConfigDict, Field
 TransactionType = Literal["expense", "income"]
 
 
-class TransactionCreate(BaseModel):
+class TransactionBase(BaseModel):
     account_name: str = Field(min_length=2, max_length=60)
+    account_id: UUID | None = None
     category_id: UUID
     type: TransactionType
     amount: float = Field(gt=0)
@@ -21,8 +22,17 @@ class TransactionCreate(BaseModel):
     notes: str = Field(default="", max_length=250)
 
 
+class TransactionCreate(TransactionBase):
+    pass
+
+
+class TransactionUpdate(TransactionBase):
+    pass
+
+
 class TransactionRead(TransactionCreate):
     id: UUID
+    account_display_name: str
     category_name: str
     created_at: datetime
     updated_at: datetime

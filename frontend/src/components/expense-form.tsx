@@ -3,15 +3,21 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 
-import { createTransaction } from "@/lib/api";
-import type { Category, CreateTransactionInput } from "@/lib/types";
+import { createTransaction, updateTransaction } from "@/lib/api";
+import type { Category, CreateTransactionInput, PaymentAccount, Transaction } from "@/lib/types";
 
 type ExpenseFormProps = {
   categories: Category[];
+  accounts: PaymentAccount[];
   onCreated: () => Promise<void>;
+  onCancel?: () => void;
+  initialType?: "expense" | "income";
+  transaction?: Transaction | null;
 };
 
 type ExpenseFormState = {
+  type: "expense" | "income";
+  account_id: string;
   account_name: string;
   category_id: string;
   amount: string;
@@ -23,6 +29,8 @@ type ExpenseFormState = {
 };
 
 const initialState: ExpenseFormState = {
+  type: "expense",
+  account_id: "",
   account_name: "Primary Wallet",
   category_id: "",
   amount: "",
@@ -33,20 +41,64 @@ const initialState: ExpenseFormState = {
   notes: "",
 };
 
-export function ExpenseForm({ categories, onCreated }: ExpenseFormProps) {
-  const [form, setForm] = useState<ExpenseFormState>(initialState);
+function buildInitialState(
+  transaction: Transaction | null | undefined,
+  initialType: "expense" | "income",
+): ExpenseFormState {
+  if (!transaction) {
+    return { ...initialState, type: initialType };
+  }
+
+  return {
+    type: transaction.type,
+    account_id: transaction.account_id ?? "",
+    account_name: transaction.account_name,
+    category_id: transaction.category_id,
+    amount: String(transaction.amount),
+    merchant_name: transaction.merchant_name,
+    description: transaction.description,
+    transaction_date: transaction.transaction_date,
+    payment_method: transaction.payment_method,
+    notes: transaction.notes,
+  };
+}
+
+export function ExpenseForm({
+  categories,
+  accounts,
+  onCreated,
+  onCancel,
+  initialType = "expense",
+  transaction,
+}: ExpenseFormProps) {
+  const [form, setForm] = useState<ExpenseFormState>(() => buildInitialState(transaction, initialType));
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [message, setMessage] = useState("Add your first real expense to move beyond the starter seed.");
-  const expenseCategories = categories.filter((category) => category.type === "expense");
+  const [message, setMessage] = useState(
+    transaction ? "Update the transaction details and save." : "Add a new ledger entry.",
+  );
+  const availableCategories = categories.filter((category) => category.type === form.type);
+  const isEditing = Boolean(transaction);
 
   useEffect(() => {
-    if (!form.category_id && expenseCategories.length > 0) {
+    const categoryStillMatches = availableCategories.some((category) => category.id === form.category_id);
+    if ((!form.category_id || !categoryStillMatches) && availableCategories.length > 0) {
       setForm((current) => ({
         ...current,
-        category_id: expenseCategories[0].id,
+        category_id: availableCategories[0].id,
       }));
     }
-  }, [expenseCategories, form.category_id]);
+  }, [availableCategories, form.category_id]);
+
+  useEffect(() => {
+    if (!form.account_id && accounts.length > 0) {
+      const defaultAccount = accounts.find((account) => account.is_default) ?? accounts[0];
+      setForm((current) => ({
+        ...current,
+        account_id: defaultAccount.id,
+        account_name: defaultAccount.name,
+      }));
+    }
+  }, [accounts, form.account_id]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -56,13 +108,14 @@ export function ExpenseForm({ categories, onCreated }: ExpenseFormProps) {
     }
 
     setIsSubmitting(true);
-    setMessage("Saving expense...");
+    setMessage(isEditing ? "Saving changes..." : "Saving transaction...");
 
     try {
       const payload: CreateTransactionInput = {
         account_name: form.account_name,
+        account_id: form.account_id || null,
         category_id: form.category_id,
-        type: "expense",
+        type: form.type,
         amount: Number(form.amount),
         currency_code: "INR",
         merchant_name: form.merchant_name,
@@ -72,13 +125,21 @@ export function ExpenseForm({ categories, onCreated }: ExpenseFormProps) {
         notes: form.notes,
       };
 
-      await createTransaction(payload);
+      if (transaction) {
+        await updateTransaction(transaction.id, payload);
+      } else {
+        await createTransaction(payload);
+      }
       setForm({
         ...initialState,
-        category_id: expenseCategories[0]?.id ?? "",
+        type: form.type,
+        category_id: availableCategories[0]?.id ?? "",
+        account_id: accounts[0]?.id ?? "",
+        account_name: accounts[0]?.name ?? "Primary Wallet",
       });
       await onCreated();
-      setMessage("Expense saved to the database.");
+      setMessage(isEditing ? "Transaction updated." : "Transaction saved to the database.");
+      onCancel?.();
     } catch {
       setMessage("Could not save the expense yet. Check that the backend is running.");
     } finally {
@@ -87,16 +148,45 @@ export function ExpenseForm({ categories, onCreated }: ExpenseFormProps) {
   }
 
   return (
-    <section className="panel">
-      <h2 className="section-title">Add expense</h2>
-      <p className="section-copy">
-        This is the first real MVP flow: enter an expense, store it in the database, and refresh
-        the dashboard immediately.
-      </p>
+    <section className="expense-form-panel">
+      <div className="form-heading-row">
+        <div>
+          <h2 className="section-title">
+            {isEditing ? "Edit Transaction" : form.type === "income" ? "New Income" : "New Expense"}
+          </h2>
+          <p className="section-copy">
+            {isEditing
+              ? "Adjust the ledger entry and refresh the dashboard analysis."
+              : "Record income or spending once, then let the dashboard update the analysis."}
+          </p>
+        </div>
+        {onCancel ? (
+          <button className="icon-button" type="button" aria-label="Close expense form" onClick={onCancel}>
+            x
+          </button>
+        ) : null}
+      </div>
 
       <form className="expense-form" onSubmit={handleSubmit}>
+        <div className="segmented-control" role="group" aria-label="Transaction type">
+          <button
+            className={form.type === "expense" ? "segment-active" : ""}
+            type="button"
+            onClick={() => setForm((current) => ({ ...current, type: "expense", category_id: "" }))}
+          >
+            Expense
+          </button>
+          <button
+            className={form.type === "income" ? "segment-active" : ""}
+            type="button"
+            onClick={() => setForm((current) => ({ ...current, type: "income", category_id: "" }))}
+          >
+            Income
+          </button>
+        </div>
+
         <label className="field">
-          <span className="field-label">Merchant</span>
+          <span className="field-label">{form.type === "income" ? "Source" : "Merchant"}</span>
           <input
             className="field-input"
             name="merchant_name"
@@ -104,7 +194,7 @@ export function ExpenseForm({ categories, onCreated }: ExpenseFormProps) {
             onChange={(event) =>
               setForm((current) => ({ ...current, merchant_name: event.target.value }))
             }
-            placeholder="Groceries, Uber, Rent"
+            placeholder={form.type === "income" ? "Salary, freelance, refund" : "Groceries, Uber, Rent"}
             required
           />
         </label>
@@ -142,6 +232,30 @@ export function ExpenseForm({ categories, onCreated }: ExpenseFormProps) {
 
         <div className="field-row">
           <label className="field">
+            <span className="field-label">Account</span>
+            <select
+              className="field-input"
+              name="account_id"
+              value={form.account_id}
+              onChange={(event) => {
+                const account = accounts.find((item) => item.id === event.target.value);
+                setForm((current) => ({
+                  ...current,
+                  account_id: event.target.value,
+                  account_name: account?.name ?? current.account_name,
+                }));
+              }}
+              required
+            >
+              {accounts.map((account) => (
+                <option key={account.id} value={account.id}>
+                  {account.name}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="field">
             <span className="field-label">Category</span>
             <select
               className="field-input"
@@ -152,7 +266,7 @@ export function ExpenseForm({ categories, onCreated }: ExpenseFormProps) {
               }
               required
             >
-              {expenseCategories.map((category) => (
+              {availableCategories.map((category) => (
                 <option key={category.id} value={category.id}>
                   {category.name}
                 </option>
@@ -175,7 +289,7 @@ export function ExpenseForm({ categories, onCreated }: ExpenseFormProps) {
           </label>
         </div>
 
-        <label className="field">
+        <label className="field hidden-field">
           <span className="field-label">Account name</span>
           <input
             className="field-input"
@@ -215,7 +329,7 @@ export function ExpenseForm({ categories, onCreated }: ExpenseFormProps) {
 
         <div className="form-actions">
           <button className="button button-primary" type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Saving..." : "Save expense"}
+            {isSubmitting ? "Saving..." : isEditing ? "Save changes" : "Save transaction"}
           </button>
           <span className="form-message">{message}</span>
         </div>

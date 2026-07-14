@@ -41,6 +41,10 @@ const initialState: ExpenseFormState = {
   notes: "",
 };
 
+function isUuid(value: string) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+}
+
 function buildInitialState(
   transaction: Transaction | null | undefined,
   initialType: "expense" | "income",
@@ -111,9 +115,10 @@ export function ExpenseForm({
     setMessage(isEditing ? "Saving changes..." : "Saving transaction...");
 
     try {
+      const selectedAccount = accounts.find((account) => account.id === form.account_id);
       const payload: CreateTransactionInput = {
-        account_name: form.account_name,
-        account_id: form.account_id || null,
+        account_name: selectedAccount?.name ?? form.account_name,
+        account_id: isUuid(form.account_id) ? form.account_id : null,
         category_id: form.category_id,
         type: form.type,
         amount: Number(form.amount),
@@ -140,8 +145,8 @@ export function ExpenseForm({
       await onCreated();
       setMessage(isEditing ? "Transaction updated." : "Transaction saved to the database.");
       onCancel?.();
-    } catch {
-      setMessage("Could not save the expense yet. Check that the backend is running.");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Could not save the transaction yet.");
     } finally {
       setIsSubmitting(false);
     }

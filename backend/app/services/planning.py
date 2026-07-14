@@ -8,7 +8,7 @@ from sqlalchemy import or_, select
 from sqlalchemy.orm import Session, selectinload
 
 from app.db.models import Budget, Category, Transaction, User
-from app.schemas.budget import BudgetCreate, BudgetRead
+from app.schemas.budget import BudgetCreate, BudgetRead, BudgetUpdate
 from app.schemas.report import CategoryReportItem, ReportsOverview, SmartInsight
 from app.services.finance import get_dashboard_summary
 
@@ -58,6 +58,47 @@ def create_budget(db: Session, user: User, payload: BudgetCreate) -> BudgetRead:
     return _to_budget_read(budget, _build_budget_usage_map(db, user), category)
 
 
+def update_budget(
+    db: Session,
+    user: User,
+    budget_id: UUID,
+    payload: BudgetUpdate,
+) -> BudgetRead:
+    budget = db.get(Budget, str(budget_id))
+    if budget is None or budget.user_id != user.id:
+        raise ValueError("Budget not found.")
+
+    category = db.get(Category, str(payload.category_id))
+    if category is None or (category.user_id is not None and category.user_id != user.id):
+        raise ValueError("Selected category does not exist.")
+    if category.type != "expense":
+        raise ValueError("Budgets can only be created for expense categories.")
+
+    existing = db.scalar(
+        select(Budget).where(
+            Budget.user_id == user.id,
+            Budget.category_id == category.id,
+            Budget.month == payload.month,
+            Budget.year == payload.year,
+            Budget.id != budget.id,
+        )
+    )
+    if existing is not None:
+        raise ValueError("A budget already exists for this category and month.")
+
+    budget.category_id = category.id
+    budget.month = payload.month
+    budget.year = payload.year
+    budget.limit_amount = payload.limit_amount
+    budget.currency_code = payload.currency_code.upper()
+    budget.alert_threshold_percent = payload.alert_threshold_percent
+    budget.is_active = True
+    db.add(budget)
+    db.commit()
+    db.refresh(budget)
+    return _to_budget_read(budget, _build_budget_usage_map(db, user), category)
+
+
 def delete_budget(db: Session, user: User, budget_id: UUID) -> None:
     budget = db.get(Budget, str(budget_id))
     if budget is None or budget.user_id != user.id:
@@ -96,7 +137,11 @@ def get_reports_overview(db: Session, user: User) -> ReportsOverview:
     transaction_counts_by_category: dict[str, int] = defaultdict(int)
     spent_by_category: dict[str, float] = defaultdict(float)
     for transaction in transactions:
-        if transaction.type != "expense":
+        if (
+            transaction.type != "expense"
+            or transaction.transaction_date.month != current_month
+            or transaction.transaction_date.year != current_year
+        ):
             continue
         spent_by_category[transaction.category_id] += transaction.amount
         transaction_counts_by_category[transaction.category_id] += 1
@@ -129,6 +174,11 @@ def get_reports_overview(db: Session, user: User) -> ReportsOverview:
         )
 
     category_breakdown.sort(key=lambda item: (-item.spent_amount, item.category_name.lower()))
+    current_budget_reads = [
+        _to_budget_read(budget, usage)
+        for budget in budgets
+        if budget.month == current_month and budget.year == current_year and budget.is_active
+    ]
     budget_reads = [_to_budget_read(budget, usage) for budget in budgets]
     monthly_budget_total = round(
         sum(
@@ -138,12 +188,12 @@ def get_reports_overview(db: Session, user: User) -> ReportsOverview:
         ),
         2,
     )
-    over_budget_count = sum(1 for budget in budget_reads if budget.utilization_percent > 100)
+    over_budget_count = sum(1 for budget in current_budget_reads if budget.utilization_percent > 100)
 
     return ReportsOverview(
         summary=get_dashboard_summary(db, user),
         category_breakdown=category_breakdown,
-        smart_insights=_build_smart_insights(category_breakdown, budget_reads, transactions),
+        smart_insights=_build_smart_insights(category_breakdown, current_budget_reads, transactions),
         budgets=budget_reads,
         monthly_budget_total=monthly_budget_total,
         over_budget_count=over_budget_count,

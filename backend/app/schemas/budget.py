@@ -13,6 +13,10 @@ class BudgetCreate(BaseModel):
     alert_threshold_percent: int = Field(default=80, ge=1, le=100)
 
 
+class BudgetUpdate(BudgetCreate):
+    pass
+
+
 class BudgetRead(BaseModel):
     id: UUID
     category_id: UUID

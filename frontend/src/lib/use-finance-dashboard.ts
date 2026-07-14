@@ -99,7 +99,7 @@ export function useFinanceDashboard() {
   const [transactions, setTransactions] = useState<Transaction[]>(fallbackTransactions);
   const [categories, setCategories] = useState<Category[]>(fallbackCategories);
   const [accounts, setAccounts] = useState<PaymentAccount[]>(fallbackAccounts);
-  const [statusLabel, setStatusLabel] = useState("Using starter preview data while the API spins up.");
+  const [statusLabel, setStatusLabel] = useState("Using local preview data while the API spins up.");
   const [deletingTransactionId, setDeletingTransactionId] = useState<string | null>(null);
   const [deactivatingAccountId, setDeactivatingAccountId] = useState<string | null>(null);
 
@@ -117,7 +117,7 @@ export function useFinanceDashboard() {
         setTransactions(nextTransactions.length ? nextTransactions : fallbackTransactions);
         setCategories(nextCategories.length ? nextCategories : fallbackCategories);
         setAccounts(nextAccounts.length ? nextAccounts : fallbackAccounts);
-        setStatusLabel(successLabel ?? "Connected to the FastAPI starter API.");
+        setStatusLabel(successLabel ?? "Connected to the FastAPI backend.");
       });
     } catch {
       startTransition(() => {

@@ -6,6 +6,7 @@ app/api/__init__.py
 app/api/deps.py
 app/api/router.py
 app/api/routes/__init__.py
+app/api/routes/accounts.py
 app/api/routes/auth.py
 app/api/routes/budgets.py
 app/api/routes/categories.py
@@ -21,6 +22,7 @@ app/db/init_db.py
 app/db/models.py
 app/db/session.py
 app/schemas/__init__.py
+app/schemas/account.py
 app/schemas/auth.py
 app/schemas/budget.py
 app/schemas/category.py
@@ -29,6 +31,7 @@ app/schemas/receipt.py
 app/schemas/report.py
 app/schemas/transaction.py
 app/services/__init__.py
+app/services/accounts.py
 app/services/auth.py
 app/services/finance.py
 app/services/notifications.py
@@ -39,4 +42,10 @@ smart_expense_tracker_api.egg-info/SOURCES.txt
 smart_expense_tracker_api.egg-info/dependency_links.txt
 smart_expense_tracker_api.egg-info/requires.txt
 smart_expense_tracker_api.egg-info/top_level.txt
+tests/test_accounts.py
+tests/test_budgets.py
+tests/test_config.py
 tests/test_health.py
+tests/test_notifications.py
+tests/test_receipts.py
+tests/test_transactions.py

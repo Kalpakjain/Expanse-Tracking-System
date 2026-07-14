@@ -1,14 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { AccountForm } from "@/components/account-form";
 import { ExpenseForm } from "@/components/expense-form";
+import { exportTransactionsCsv, importTransactionsCsv } from "@/lib/api";
 import { formatCurrency } from "@/lib/format";
 import { useFinanceDashboard } from "@/lib/use-finance-dashboard";
 import type { Category, PaymentAccount, Transaction } from "@/lib/types";
 
-const chartFallbackColors = ["#2563EB", "#14B8A6", "#F97316", "#A855F7", "#EAB308", "#EF4444"];
+const chartFallbackColors = ["#B0305C", "#1F2A44", "#A8823C", "#D6426B", "#6D78CC", "#10B981"];
 
 function getMonthLabel(monthKey: string) {
   const [year, month] = monthKey.split("-").map(Number);
@@ -107,6 +108,9 @@ export function HomeWorkspace() {
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [editingAccount, setEditingAccount] = useState<PaymentAccount | null>(null);
   const [selectedAccountId, setSelectedAccountId] = useState("all");
+  const [ledgerMessage, setLedgerMessage] = useState("");
+  const [isImportingCsv, setIsImportingCsv] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -145,6 +149,44 @@ export function HomeWorkspace() {
     setIsAccountFormOpen(true);
   }
 
+  async function handleExportCsv() {
+    setLedgerMessage("Preparing CSV export...");
+    try {
+      const blob = await exportTransactionsCsv();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "smart-expense-transactions.csv";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      setLedgerMessage("CSV export downloaded.");
+    } catch {
+      setLedgerMessage("Could not export CSV right now.");
+    }
+  }
+
+  async function handleImportCsv(file: File | null) {
+    if (!file) {
+      return;
+    }
+    setIsImportingCsv(true);
+    setLedgerMessage("Importing CSV transactions...");
+    try {
+      const result = await importTransactionsCsv(file);
+      await loadDashboard(`Imported ${result.imported_count} transactions from CSV.`);
+      setLedgerMessage(`Imported ${result.imported_count}; skipped ${result.skipped_count}.`);
+    } catch {
+      setLedgerMessage("Could not import CSV. Check the column format and try again.");
+    } finally {
+      setIsImportingCsv(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  }
+
   function closeAccountForm() {
     setEditingAccount(null);
     setIsAccountFormOpen(false);
@@ -155,7 +197,6 @@ export function HomeWorkspace() {
     selectedAccountId === "all"
       ? transactions
       : transactions.filter((transaction) => transaction.account_id === selectedAccountId);
-  const visibleTransactions = filteredTransactions.slice(0, 6);
   const monthlyAnalysis = useMemo(() => buildMonthlyAnalysis(filteredTransactions), [filteredTransactions]);
   const categoryAnalysis = useMemo(
     () => buildCategoryAnalysis(filteredTransactions, categories),
@@ -165,18 +206,61 @@ export function HomeWorkspace() {
   const totalExpense = categoryAnalysis.reduce((sum, category) => sum + category.amount, 0);
   const pieGradient = buildPieGradient(categoryAnalysis);
   const topCategory = categoryAnalysis[0];
+  const currentMonth = monthlyAnalysis[monthlyAnalysis.length - 1] ?? {
+    income: 0,
+    expense: 0,
+    balance: 0,
+    label: "This month",
+    monthKey: "",
+  };
+  const monthlySavings = Math.max(currentMonth.income - currentMonth.expense, 0);
+  const savingsRate = currentMonth.income
+    ? Math.round((monthlySavings / currentMonth.income) * 100)
+    : 0;
 
   return (
     <main className="page-shell">
-      <section className="dashboard-hero">
-        <div>
-          <span className="eyebrow">Dashboard</span>
-          <h1>Expense analysis at a glance.</h1>
-          <p>
-            Review monthly movement, category split, and recent spending. Add a new expense only
-            when you need the form.
-          </p>
-          <div className="hero-actions">
+      <section className="dashboard-topbar">
+        <div className="dashboard-welcome">
+          <div className="dashboard-avatar">FT</div>
+          <div>
+            <p>Welcome back</p>
+            <h1>Here is your financial overview for today.</h1>
+          </div>
+        </div>
+        <div className="dashboard-toolbar">
+          <span className="status-chip">
+            <span className="material-symbols-outlined" aria-hidden="true">cloud_done</span>
+            {statusLabel}
+          </span>
+          <button
+            className="icon-button"
+            type="button"
+            aria-label="Refresh dashboard"
+            title="Refresh dashboard"
+            onClick={() => {
+              void loadDashboard("Dashboard refreshed.");
+            }}
+          >
+            <span className="material-symbols-outlined" aria-hidden="true">sync</span>
+          </button>
+        </div>
+      </section>
+
+      <section className="dashboard-overview-grid" aria-label="Dashboard summary">
+        <article className="balance-card">
+          <div className="balance-card-top">
+            <span>Total balance</span>
+            <span className="material-symbols-outlined" aria-hidden="true">visibility</span>
+          </div>
+          <strong>{formatCurrency(summary.balance, "INR")}</strong>
+          <div className="balance-trend">
+            <span className={summary.balance >= 0 ? "trend-pill trend-positive" : "trend-pill trend-negative"}>
+              {summary.balance >= 0 ? "+" : "-"} {savingsRate}% savings
+            </span>
+            <span>this month</span>
+          </div>
+          <div className="hero-actions dashboard-actions">
             <button
               className="button button-primary"
               type="button"
@@ -191,54 +275,53 @@ export function HomeWorkspace() {
             >
               Add Income
             </button>
-            <span className="button button-secondary">{statusLabel}</span>
           </div>
-        </div>
+        </article>
 
-        <div className="hero-balance-card">
-          <div className="stat-label">Net balance</div>
-          <div className="hero-balance-value">{formatCurrency(summary.balance, "INR")}</div>
-          <div className="stat-footnote">
-            {summary.transaction_count} transactions across {summary.category_count} categories
+        <article className="metric-card">
+          <div className="metric-icon income-icon">
+            <span className="material-symbols-outlined" aria-hidden="true">payments</span>
           </div>
-        </div>
-      </section>
+          <span>Monthly income</span>
+          <strong>{formatCurrency(currentMonth.income, "INR")}</strong>
+          <p>{formatCurrency(summary.total_income, "INR")} total recorded</p>
+        </article>
 
-      <section className="grid stats-grid">
-        <article className="panel stat-card">
-          <div className="stat-label">Total income</div>
-          <div className="stat-value">{formatCurrency(summary.total_income, "INR")}</div>
-          <div className="stat-footnote">All recorded income so far</div>
+        <article className="metric-card">
+          <div className="metric-icon expense-icon">
+            <span className="material-symbols-outlined" aria-hidden="true">trending_down</span>
+          </div>
+          <span>Monthly expenses</span>
+          <strong>{formatCurrency(currentMonth.expense, "INR")}</strong>
+          <p>{formatCurrency(summary.total_expenses, "INR")} total spending</p>
         </article>
-        <article className="panel stat-card">
-          <div className="stat-label">Total expenses</div>
-          <div className="stat-value">{formatCurrency(summary.total_expenses, "INR")}</div>
-          <div className="stat-footnote">Current total spending</div>
-        </article>
-        <article className="panel stat-card">
-          <div className="stat-label">Net balance</div>
-          <div className="stat-value">{formatCurrency(summary.balance, "INR")}</div>
-          <div className="stat-footnote">Income minus expenses</div>
-        </article>
-        <article className="panel stat-card">
-          <div className="stat-label">Transactions</div>
-          <div className="stat-value">{summary.transaction_count}</div>
-          <div className="stat-footnote">{categories.length} categories available</div>
+
+        <article className="metric-card">
+          <div className="metric-icon savings-icon">
+            <span className="material-symbols-outlined" aria-hidden="true">savings</span>
+          </div>
+          <span>Monthly savings</span>
+          <strong>{formatCurrency(monthlySavings, "INR")}</strong>
+          <p>{summary.transaction_count} transactions tracked</p>
         </article>
       </section>
 
-      <section className="panel account-strip">
-        <div className="panel-header">
-          <div>
-            <h2 className="section-title">Payment accounts</h2>
-            <p className="section-copy">Filter the dashboard by wallet, cash, bank, UPI, or card.</p>
-          </div>
-          <div className="account-toolbar">
+      <section className="dashboard-main-grid">
+        <article className="panel chart-panel spending-card">
+          <div className="panel-header">
+            <div>
+              <h2 className="section-title">Spending overview</h2>
+              <p className="section-copy">
+                {topCategory
+                  ? `${topCategory.name} is your top spending category.`
+                  : "Add transactions to unlock category insights."}
+              </p>
+            </div>
             <select
-              className="field-input account-filter"
+              className="field-input compact-select"
               value={selectedAccountId}
               onChange={(event) => setSelectedAccountId(event.target.value)}
-              aria-label="Filter by account"
+              aria-label="Filter spending overview by account"
             >
               <option value="all">All accounts</option>
               {accounts.map((account) => (
@@ -247,53 +330,68 @@ export function HomeWorkspace() {
                 </option>
               ))}
             </select>
-            <button className="button button-primary compact-button" type="button" onClick={() => openAccountForm()}>
-              Add Account
-            </button>
           </div>
-        </div>
-        <div className="account-card-grid">
-          {accounts.map((account) => (
-            <div
-              className={
-                selectedAccountId === account.id ? "account-card account-card-active" : "account-card"
-              }
-              key={account.id}
-            >
-              <button className="account-card-main" type="button" onClick={() => setSelectedAccountId(account.id)}>
-                <span className="badge-dot large-dot" style={{ backgroundColor: account.color }} />
-                <span className="item-title">{account.name}</span>
-                <strong>{formatCurrency(account.current_balance, account.currency_code)}</strong>
-                <span className="item-subtitle">
-                  {account.type.replace("_", " ")}
-                  {account.is_default ? " • default" : ""}
-                </span>
-              </button>
-              <div className="row-actions account-actions">
-                <button
-                  className="button button-secondary compact-button"
-                  type="button"
-                  onClick={() => openAccountForm(account)}
-                >
-                  Edit
-                </button>
-                <button
-                  className="button button-tertiary compact-button"
-                  type="button"
-                  disabled={deactivatingAccountId === account.id || accounts.length <= 1}
-                  onClick={() => {
-                    void removeAccount(account.id);
-                    if (selectedAccountId === account.id) {
-                      setSelectedAccountId("all");
-                    }
-                  }}
-                >
-                  {deactivatingAccountId === account.id ? "Removing..." : "Deactivate"}
-                </button>
-              </div>
+          <div className="spending-overview">
+            <div className="pie-chart" style={{ background: pieGradient }}>
+              <span>{categoryAnalysis.length}</span>
             </div>
-          ))}
-        </div>
+            <div className="category-legend spending-legend">
+              {categoryAnalysis.length ? (
+                categoryAnalysis.slice(0, 6).map((category) => (
+                  <div className="legend-item spending-row" key={category.name}>
+                    <span className="badge-dot" style={{ backgroundColor: category.color }} />
+                    <span>{category.name}</span>
+                    <strong>{formatCurrency(category.amount, "INR")}</strong>
+                    <em>{totalExpense ? Math.round((category.amount / totalExpense) * 100) : 0}%</em>
+                  </div>
+                ))
+              ) : (
+                <div className="empty-state">No category spend yet.</div>
+              )}
+            </div>
+          </div>
+        </article>
+
+        <aside className="dashboard-side-stack">
+          <article className="ai-insight-card">
+            <div>
+              <span className="material-symbols-outlined" aria-hidden="true">tips_and_updates</span>
+              <h2>AI smart insight</h2>
+            </div>
+            <p>
+              {topCategory
+                ? `${topCategory.name} is leading your spend. Review it before your next purchase.`
+                : "Add a few transactions and FinTrack AI will surface useful spending patterns."}
+            </p>
+            <button className="button insight-button" type="button" onClick={() => openTransactionForm("expense")}>
+              Add new expense
+            </button>
+          </article>
+
+          <article className="panel quick-actions-panel">
+            <div className="panel-header">
+              <h2 className="section-title">Quick actions</h2>
+            </div>
+            <div className="quick-actions-grid">
+              <button type="button" onClick={() => openTransactionForm("expense")}>
+                <span className="material-symbols-outlined" aria-hidden="true">add_card</span>
+                Expense
+              </button>
+              <button type="button" onClick={() => openTransactionForm("income")}>
+                <span className="material-symbols-outlined" aria-hidden="true">account_balance_wallet</span>
+                Income
+              </button>
+              <button type="button" onClick={() => openAccountForm()}>
+                <span className="material-symbols-outlined" aria-hidden="true">account_balance</span>
+                Account
+              </button>
+              <button type="button" onClick={handleExportCsv}>
+                <span className="material-symbols-outlined" aria-hidden="true">download</span>
+                Export
+              </button>
+            </div>
+          </article>
+        </aside>
       </section>
 
       <section className="grid content-grid">
@@ -321,66 +419,18 @@ export function HomeWorkspace() {
         </article>
 
         <aside className="panel chart-panel">
-          <h2 className="section-title">Category-wise split</h2>
-          <p className="section-copy">
-            {topCategory
-              ? `${topCategory.name} is currently the largest category.`
-              : "Add expenses to generate a category chart."}
-          </p>
-          <div className="pie-layout">
-            <div className="pie-chart" style={{ background: pieGradient }}>
-              <span>{categoryAnalysis.length}</span>
-            </div>
-            <div className="category-legend">
-              {categoryAnalysis.slice(0, 5).map((category) => (
-                <div className="legend-item" key={category.name}>
-                  <span className="badge-dot" style={{ backgroundColor: category.color }} />
-                  <span>{category.name}</span>
-                  <strong>{totalExpense ? Math.round((category.amount / totalExpense) * 100) : 0}%</strong>
-                </div>
-              ))}
-            </div>
-          </div>
-        </aside>
-      </section>
-
-      <section className="grid content-grid">
-        <article className="panel">
-          <h2 className="section-title">Category cards</h2>
-          <p className="section-copy">The most important category totals, ranked by spend.</p>
-          <div className="analysis-card-grid">
-            {categoryAnalysis.length ? (
-              categoryAnalysis.slice(0, 4).map((category) => (
-                <div className="mini-analysis-card" key={category.name}>
-                  <span className="badge-dot large-dot" style={{ backgroundColor: category.color }} />
-                  <div className="item-title">{category.name}</div>
-                  <div className="stat-value compact-stat">{formatCurrency(category.amount, "INR")}</div>
-                  <div className="stat-footnote">{category.count} transactions</div>
-                </div>
-              ))
-            ) : (
-              <div className="empty-state">No category spend yet.</div>
-            )}
-          </div>
-        </article>
-
-        <aside className="panel">
           <h2 className="section-title">Recent transactions</h2>
           <p className="section-copy">Latest records with edit and delete support.</p>
           <div className="list">
-            {visibleTransactions.length ? (
-              visibleTransactions.map((transaction) => (
+            {topTransactions.length ? (
+              topTransactions.map((transaction) => (
                 <div className="list-item" key={transaction.id}>
                   <div className="list-main">
                     <div>
                       <div className="item-title">{transaction.merchant_name}</div>
                       <div className="item-subtitle">
                         {transaction.category_name} • {transaction.account_display_name} •{" "}
-                        {transaction.payment_method} •{" "}
-                        {transaction.transaction_date}
-                      </div>
-                      <div className="item-subtitle">
-                        {transaction.description || "No description"}
+                        {transaction.payment_method}
                       </div>
                     </div>
                     <div className="row-actions">
@@ -403,11 +453,7 @@ export function HomeWorkspace() {
                       </button>
                     </div>
                   </div>
-                  <div
-                    className={
-                      transaction.type === "expense" ? "amount-expense" : "amount-income"
-                    }
-                  >
+                  <div className={transaction.type === "expense" ? "amount-expense" : "amount-income"}>
                     {transaction.type === "expense" ? "-" : "+"}
                     {formatCurrency(transaction.amount, transaction.currency_code)}
                   </div>
@@ -418,6 +464,121 @@ export function HomeWorkspace() {
                 No transactions yet. Use New Expense to start tracking real data.
               </div>
             )}
+          </div>
+        </aside>
+      </section>
+
+      <section className="grid content-grid">
+        <article className="panel">
+          <div className="panel-header">
+            <div>
+              <h2 className="section-title">Category cards</h2>
+              <p className="section-copy">The most important category totals, ranked by spend.</p>
+            </div>
+            <div className="account-toolbar">
+              <button className="button button-secondary compact-button" type="button" onClick={handleExportCsv}>
+                Export CSV
+              </button>
+              <button
+                className="button button-secondary compact-button"
+                type="button"
+                disabled={isImportingCsv}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                {isImportingCsv ? "Importing..." : "Import CSV"}
+              </button>
+              <input
+                ref={fileInputRef}
+                className="hidden-field"
+                type="file"
+                accept=".csv,text/csv"
+                onChange={(event) => {
+                  void handleImportCsv(event.target.files?.[0] ?? null);
+                }}
+              />
+            </div>
+          </div>
+          {ledgerMessage ? <div className="form-message ledger-message">{ledgerMessage}</div> : null}
+          <div className="analysis-card-grid">
+            {categoryAnalysis.length ? (
+              categoryAnalysis.slice(0, 4).map((category) => (
+                <div className="mini-analysis-card" key={category.name}>
+                  <span className="badge-dot large-dot" style={{ backgroundColor: category.color }} />
+                  <div className="item-title">{category.name}</div>
+                  <div className="stat-value compact-stat">{formatCurrency(category.amount, "INR")}</div>
+                  <div className="stat-footnote">{category.count} transactions</div>
+                </div>
+              ))
+            ) : (
+              <div className="empty-state">No category spend yet.</div>
+            )}
+          </div>
+        </article>
+
+        <aside className="panel account-strip">
+          <div className="panel-header">
+            <div>
+              <h2 className="section-title">Payment accounts</h2>
+              <p className="section-copy">Filter by wallet, cash, bank, UPI, or card.</p>
+            </div>
+            <button className="button button-primary compact-button" type="button" onClick={() => openAccountForm()}>
+              Add Account
+            </button>
+          </div>
+          <select
+            className="field-input account-filter account-filter-full"
+            value={selectedAccountId}
+            onChange={(event) => setSelectedAccountId(event.target.value)}
+            aria-label="Filter by account"
+          >
+            <option value="all">All accounts</option>
+            {accounts.map((account) => (
+              <option key={account.id} value={account.id}>
+                {account.name}
+              </option>
+            ))}
+          </select>
+          <div className="account-card-grid compact-account-grid">
+            {accounts.map((account) => (
+              <div
+                className={
+                  selectedAccountId === account.id ? "account-card account-card-active" : "account-card"
+                }
+                key={account.id}
+              >
+                <button className="account-card-main" type="button" onClick={() => setSelectedAccountId(account.id)}>
+                  <span className="badge-dot large-dot" style={{ backgroundColor: account.color }} />
+                  <span className="item-title">{account.name}</span>
+                  <strong>{formatCurrency(account.current_balance, account.currency_code)}</strong>
+                  <span className="item-subtitle">
+                    {account.type.replace("_", " ")}
+                    {account.is_default ? " • default" : ""}
+                  </span>
+                </button>
+                <div className="row-actions account-actions">
+                  <button
+                    className="button button-secondary compact-button"
+                    type="button"
+                    onClick={() => openAccountForm(account)}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    className="button button-tertiary compact-button"
+                    type="button"
+                    disabled={deactivatingAccountId === account.id || accounts.length <= 1}
+                    onClick={() => {
+                      void removeAccount(account.id);
+                      if (selectedAccountId === account.id) {
+                        setSelectedAccountId("all");
+                      }
+                    }}
+                  >
+                    {deactivatingAccountId === account.id ? "Removing..." : "Deactivate"}
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
         </aside>
       </section>

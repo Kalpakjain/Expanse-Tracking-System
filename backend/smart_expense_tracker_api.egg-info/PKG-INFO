@@ -81,3 +81,4 @@ For deployed environments, set `DATABASE_AUTO_CREATE_TABLES=false` and run migra
 - `DEMO_USER_PASSWORD`
 
 Use [`.env.example`](./.env.example) as the starting point for local or hosted configuration.
+Use [`.env.production.example`](./.env.production.example) for production deployments.

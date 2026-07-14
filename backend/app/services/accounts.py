@@ -6,6 +6,7 @@ from app.schemas.account import PaymentAccountCreate, PaymentAccountRead, Paymen
 
 
 def list_payment_accounts(db: Session, user: User) -> list[PaymentAccountRead]:
+    get_or_create_default_account(db, user)
     accounts = db.scalars(
         select(PaymentAccount)
         .where(PaymentAccount.user_id == user.id, PaymentAccount.is_active.is_(True))
@@ -139,7 +140,7 @@ def get_or_create_default_account(db: Session, user: User) -> PaymentAccount:
         institution_name="",
         opening_balance=0.0,
         currency_code="INR",
-        color="#0051D5",
+        color="#B0305C",
         is_default=True,
         is_active=True,
     )

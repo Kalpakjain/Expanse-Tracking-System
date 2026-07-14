@@ -1,6 +1,6 @@
 # Product Layers
 
-This project is being built as a layered INR-first finance product so the foundations stay stable while smarter features are added later.
+This project is built as a layered INR-first finance product so the foundations stay stable while smarter features are added.
 
 ## Layer 1: Capture
 
@@ -40,13 +40,13 @@ Reduce manual follow-up work after the records are captured.
 Scope:
 
 - notification preferences
-- daily digest scheduling
-- weekly summary scheduling
+- daily digest previews
+- weekly summary previews
 - budget threshold alerts
 - recurring-expense reminders
 
 Current status:
-Preferences are implemented. Delivery and background scheduling are next.
+Implemented locally with saved preferences and backend-generated preview messages. Real WhatsApp delivery can be attached during deployment.
 
 ## Layer 4: Intelligence
 
@@ -55,14 +55,14 @@ Turn the finance record into guidance.
 
 Scope:
 
-- receipt OCR
+- receipt upload review
 - auto-categorization
 - duplicate detection
 - anomaly detection
 - natural-language insights
 
 Current status:
-Designed, not yet implemented.
+Implemented locally through receipt review, category suggestions, duplicate checks, budget insights, recurring reminders, and savings suggestions. Full external OCR or hosted AI providers can be attached later.
 
 ## Layer 5: Platform
 

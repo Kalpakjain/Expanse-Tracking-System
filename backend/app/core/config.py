@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     app_env: str = "development"
     app_host: str = "0.0.0.0"
     app_port: int = 8000
-    frontend_origins: str = "http://localhost:3000"
+    frontend_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
     database_url: str = "sqlite:///./expense_tracker.db"
     database_auto_create_tables: bool = True
     redis_url: str = "redis://redis:6379/0"
@@ -19,6 +19,18 @@ class Settings(BaseSettings):
     auth_required: bool = False
     demo_user_email: str = "demo@fintrack.local"
     demo_user_password: str = "demo12345"
+    email_enabled: bool = False
+    brevo_smtp_host: str = "smtp-relay.brevo.com"
+    brevo_smtp_port: int = 587
+    brevo_smtp_user: str = ""
+    brevo_smtp_pass: str = ""
+    sender_email: str = ""
+    sender_name: str = "FinTrack AI"
+    otp_ttl_minutes: int = 5
+    otp_rate_limit_count: int = 3
+    otp_rate_limit_window_minutes: int = 10
+    otp_max_attempts: int = 5
+    expose_dev_otp: bool = False
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

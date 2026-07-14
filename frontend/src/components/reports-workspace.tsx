@@ -6,7 +6,32 @@ import { BudgetForm } from "@/components/budget-form";
 import { deleteBudget, getReportsOverview } from "@/lib/api";
 import { formatCurrency } from "@/lib/format";
 import { useFinanceDashboard } from "@/lib/use-finance-dashboard";
-import type { ReportsOverview, Transaction } from "@/lib/types";
+import type { Budget, ReportsOverview, Transaction } from "@/lib/types";
+
+const monthNames = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+
+function budgetState(budget: Budget) {
+  if (budget.utilization_percent > 100) {
+    return { label: "Over budget", className: "budget-danger" };
+  }
+  if (budget.utilization_percent >= budget.alert_threshold_percent) {
+    return { label: "Near limit", className: "budget-warning" };
+  }
+  return { label: "On track", className: "budget-healthy" };
+}
 
 function buildCategorySpendBreakdown(transactions: Transaction[]) {
   const totals = new Map<string, { amount: number; count: number }>();
@@ -47,6 +72,9 @@ export function ReportsWorkspace() {
   });
   const [reportMessage, setReportMessage] = useState("Loading report overview...");
   const [deletingBudgetId, setDeletingBudgetId] = useState<string | null>(null);
+  const [editingBudget, setEditingBudget] = useState<Budget | null>(null);
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
   const fallbackBreakdown = buildCategorySpendBreakdown(transactions).map((entry) => {
     const matchingCategory = categories.find((category) => category.name === entry.name);
@@ -77,6 +105,9 @@ export function ReportsWorkspace() {
   }, [loadReports]);
 
   const breakdown = overview.category_breakdown.length ? overview.category_breakdown : fallbackBreakdown;
+  const filteredBudgets = overview.budgets.filter(
+    (budget) => budget.month === selectedMonth && budget.year === selectedYear,
+  );
   async function handleDeleteBudget(budgetId: string) {
     setDeletingBudgetId(budgetId);
     try {
@@ -216,18 +247,45 @@ export function ReportsWorkspace() {
         />
 
         <aside className="panel">
-          <h2 className="section-title">Configured budgets</h2>
-          <p className="section-copy">
-            Use these to keep monthly rupee limits visible and actionable across your reporting flow.
-          </p>
+          <div className="panel-header budget-header">
+            <div>
+              <h2 className="section-title">Configured budgets</h2>
+              <p className="section-copy">Review limits, warnings, and utilization by month.</p>
+            </div>
+            <div className="budget-period-controls">
+              <select
+                className="field-input"
+                value={selectedMonth}
+                onChange={(event) => setSelectedMonth(Number(event.target.value))}
+                aria-label="Budget month"
+              >
+                {monthNames.map((month, index) => (
+                  <option key={month} value={index + 1}>
+                    {month}
+                  </option>
+                ))}
+              </select>
+              <input
+                className="field-input"
+                type="number"
+                min="2025"
+                max="2100"
+                value={selectedYear}
+                onChange={(event) => setSelectedYear(Number(event.target.value))}
+                aria-label="Budget year"
+              />
+            </div>
+          </div>
           <div className="list">
-            {overview.budgets.length ? (
-              overview.budgets.map((budget) => (
-                <div className="list-item" key={budget.id}>
+            {filteredBudgets.length ? (
+              filteredBudgets.map((budget) => {
+                const state = budgetState(budget);
+                return (
+                <div className={`list-item budget-item ${state.className}`} key={budget.id}>
                   <div className="list-main">
                     <div>
                       <div className="item-title">
-                        {budget.category_name} • {budget.month}/{budget.year}
+                        {budget.category_name} • {monthNames[budget.month - 1]} {budget.year}
                       </div>
                       <div className="item-subtitle">
                         Limit {formatCurrency(budget.limit_amount, budget.currency_code)} • Spent{" "}
@@ -237,23 +295,40 @@ export function ReportsWorkspace() {
                         Remaining {formatCurrency(budget.remaining_amount, budget.currency_code)} •{" "}
                         {budget.utilization_percent.toFixed(1)}% used
                       </div>
+                      <div className="budget-progress" aria-label={`${budget.utilization_percent}% used`}>
+                        <span style={{ width: `${Math.min(budget.utilization_percent, 100)}%` }} />
+                      </div>
+                      <div className="budget-state-row">
+                        <span className="budget-state-label">{state.label}</span>
+                        <span className="item-subtitle">Alert at {budget.alert_threshold_percent}%</span>
+                      </div>
                     </div>
-                    <button
-                      className="button button-tertiary"
-                      type="button"
-                      disabled={deletingBudgetId === budget.id}
-                      onClick={() => {
-                        void handleDeleteBudget(budget.id);
-                      }}
-                    >
-                      {deletingBudgetId === budget.id ? "Deleting..." : "Delete"}
-                    </button>
+                    <div className="row-actions">
+                      <button
+                        className="button button-secondary compact-button"
+                        type="button"
+                        onClick={() => setEditingBudget(budget)}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        className="button button-tertiary compact-button"
+                        type="button"
+                        disabled={deletingBudgetId === budget.id}
+                        onClick={() => {
+                          void handleDeleteBudget(budget.id);
+                        }}
+                      >
+                        {deletingBudgetId === budget.id ? "Deleting..." : "Delete"}
+                      </button>
+                    </div>
                   </div>
                 </div>
-              ))
+                );
+              })
             ) : (
               <div className="empty-state">
-                No budgets yet. Create a category budget here to unlock deeper reports and future alerts.
+                No budgets for {monthNames[selectedMonth - 1]} {selectedYear}. Create one to begin tracking limits.
               </div>
             )}
           </div>
@@ -275,6 +350,24 @@ export function ReportsWorkspace() {
           ))}
         </div>
       </section>
+
+      {editingBudget ? (
+        <div className="modal-backdrop" role="presentation">
+          <div className="modal-panel" role="dialog" aria-modal="true" aria-label="Edit budget form">
+            <BudgetForm
+              budget={editingBudget}
+              categories={categories}
+              onCancel={() => setEditingBudget(null)}
+              onCreated={async () => {
+                await Promise.all([
+                  loadDashboard("Budget updated and dashboard refreshed from the database."),
+                  loadReports("Budget updated and reports refreshed."),
+                ]);
+              }}
+            />
+          </div>
+        </div>
+      ) : null}
     </main>
   );
 }

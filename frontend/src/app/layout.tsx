@@ -1,6 +1,7 @@
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import type { Metadata } from "next";
-import { SiteHeader } from "@/components/site-header";
+import { AppShell } from "@/components/app-shell";
+import { AuthGate } from "@/components/auth-gate";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -16,8 +17,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <SiteHeader />
-        {children}
+        <Suspense>
+          <AuthGate>
+            <AppShell>{children}</AppShell>
+          </AuthGate>
+        </Suspense>
       </body>
     </html>
   );

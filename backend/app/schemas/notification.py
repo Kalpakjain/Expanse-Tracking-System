@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -18,3 +19,22 @@ class NotificationPreferencesRead(NotificationPreferencesUpdate):
     id: UUID
     created_at: datetime
     updated_at: datetime
+
+
+NotificationKind = Literal["daily_digest", "budget_alert", "weekly_summary", "recurring_reminder"]
+NotificationSeverity = Literal["low", "medium", "high"]
+
+
+class NotificationPreviewItem(BaseModel):
+    kind: NotificationKind
+    title: str
+    message: str
+    severity: NotificationSeverity = "low"
+    enabled: bool = True
+
+
+class NotificationPreview(BaseModel):
+    send_hour: int
+    timezone: str
+    phone_number: str
+    messages: list[NotificationPreviewItem]

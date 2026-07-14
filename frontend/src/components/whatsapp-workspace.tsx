@@ -5,9 +5,10 @@ import type { FormEvent } from "react";
 
 import {
   getNotificationPreferences,
+  getNotificationPreview,
   updateNotificationPreferences,
 } from "@/lib/api";
-import type { NotificationPreferencesInput } from "@/lib/types";
+import type { NotificationPreferencesInput, NotificationPreview } from "@/lib/types";
 
 export function WhatsAppWorkspace() {
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -17,6 +18,7 @@ export function WhatsAppWorkspace() {
   const [preferredSendHour, setPreferredSendHour] = useState("20");
   const [timezone, setTimezone] = useState("Asia/Kolkata");
   const [isSaving, setIsSaving] = useState(false);
+  const [preview, setPreview] = useState<NotificationPreview | null>(null);
   const [message, setMessage] = useState(
     "Loading your saved WhatsApp notification preferences..."
   );
@@ -38,7 +40,17 @@ export function WhatsAppWorkspace() {
     }
 
     void loadPreferences();
+    void loadPreview();
   }, []);
+
+  async function loadPreview() {
+    try {
+      const nextPreview = await getNotificationPreview();
+      setPreview(nextPreview);
+    } catch {
+      setPreview(null);
+    }
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -56,6 +68,7 @@ export function WhatsAppWorkspace() {
         currency_code: "INR",
       };
       await updateNotificationPreferences(payload);
+      await loadPreview();
       setMessage("Notification preferences saved to the backend.");
     } catch {
       setMessage("Could not save notification preferences right now.");
@@ -71,17 +84,17 @@ export function WhatsAppWorkspace() {
           <span className="eyebrow">WhatsApp Notification</span>
           <h1>Turn expense updates into timely nudges.</h1>
           <p>
-            This section is the future home for daily summaries, budget threshold alerts, and quick
-            spending reminders sent through WhatsApp.
+            Configure alert preferences and preview the exact digest, budget, weekly, and recurring
+            reminders generated from your local expense data.
           </p>
         </article>
 
         <aside className="hero-side">
           <div className="hero-card side-card">
-            <h2>Current stage</h2>
+            <h2>Local alert preview</h2>
             <p>
-              Preference storage is live. The next backend step is scheduled delivery and WhatsApp
-              provider integration.
+              Messages are generated from your real local expenses and budgets. The same payloads
+              are ready for a WhatsApp provider during deployment.
             </p>
           </div>
         </aside>
@@ -165,35 +178,39 @@ export function WhatsAppWorkspace() {
         </article>
 
         <aside className="panel">
-          <h2 className="section-title">Planned alert types</h2>
-          <div className="checklist">
-            <div className="checklist-item">
-              <span className="check">1</span>
-              <div>
-                <div className="item-title">Daily summary</div>
-                <div className="item-subtitle">
-                  A compact message with the day’s spending and key categories.
-                </div>
-              </div>
+          <div className="form-heading-row">
+            <div>
+              <h2 className="section-title">Live message preview</h2>
+              <p className="section-copy">
+                Scheduled for {preview?.send_hour ?? preferredSendHour}:00 {preview?.timezone ?? timezone}.
+              </p>
             </div>
-            <div className="checklist-item">
-              <span className="check">2</span>
-              <div>
-                <div className="item-title">Budget alerts</div>
-                <div className="item-subtitle">
-                  Notifications when a category gets close to or crosses a monthly limit.
-                </div>
-              </div>
-            </div>
-            <div className="checklist-item">
-              <span className="check">3</span>
-              <div>
-                <div className="item-title">Recurring reminders</div>
-                <div className="item-subtitle">
-                  Nudge users about predictable bills or expenses that usually show up.
-                </div>
-              </div>
-            </div>
+            <button className="button button-secondary" type="button" onClick={() => void loadPreview()}>
+              Refresh
+            </button>
+          </div>
+
+          <div className="notification-preview-list">
+            {preview?.messages.length ? (
+              preview.messages.map((item) => (
+                <article
+                  className={`notification-preview-card notification-${item.severity}`}
+                  key={`${item.kind}-${item.title}`}
+                >
+                  <div className="receipt-card-top">
+                    <div>
+                      <div className="item-title">{item.title}</div>
+                      <div className="item-subtitle">{item.message}</div>
+                    </div>
+                    <span className={item.enabled ? "status-pill status-posted" : "status-pill"}>
+                      {item.enabled ? "Enabled" : "Off"}
+                    </span>
+                  </div>
+                </article>
+              ))
+            ) : (
+              <div className="empty-state">No preview messages available yet.</div>
+            )}
           </div>
         </aside>
       </section>

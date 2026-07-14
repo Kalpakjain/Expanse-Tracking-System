@@ -3,12 +3,14 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 
-import { createBudget } from "@/lib/api";
-import type { Category, CreateBudgetInput } from "@/lib/types";
+import { createBudget, updateBudget } from "@/lib/api";
+import type { Budget, Category, CreateBudgetInput } from "@/lib/types";
 
 type BudgetFormProps = {
   categories: Category[];
   onCreated: () => Promise<void>;
+  budget?: Budget | null;
+  onCancel?: () => void;
 };
 
 type BudgetFormState = {
@@ -29,10 +31,25 @@ const initialState: BudgetFormState = {
   alert_threshold_percent: "80",
 };
 
-export function BudgetForm({ categories, onCreated }: BudgetFormProps) {
-  const [form, setForm] = useState<BudgetFormState>(initialState);
+function buildInitialState(budget?: Budget | null): BudgetFormState {
+  if (!budget) {
+    return initialState;
+  }
+  return {
+    category_id: budget.category_id,
+    month: String(budget.month),
+    year: String(budget.year),
+    limit_amount: String(budget.limit_amount),
+    alert_threshold_percent: String(budget.alert_threshold_percent),
+  };
+}
+
+export function BudgetForm({ categories, onCreated, budget, onCancel }: BudgetFormProps) {
+  const [form, setForm] = useState<BudgetFormState>(() => buildInitialState(budget));
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [message, setMessage] = useState("Create monthly category budgets in Indian rupees.");
+  const [message, setMessage] = useState(
+    budget ? "Update the monthly budget and warning threshold." : "Create monthly category budgets in Indian rupees.",
+  );
   const expenseCategories = categories.filter((category) => category.type === "expense");
 
   useEffect(() => {
@@ -61,13 +78,18 @@ export function BudgetForm({ categories, onCreated }: BudgetFormProps) {
         alert_threshold_percent: Number(form.alert_threshold_percent),
       };
 
-      await createBudget(payload);
+      if (budget) {
+        await updateBudget(budget.id, payload);
+      } else {
+        await createBudget(payload);
+      }
       setForm({
         ...initialState,
         category_id: expenseCategories[0]?.id ?? "",
       });
       await onCreated();
-      setMessage("Budget saved in rupees.");
+      setMessage(budget ? "Budget updated." : "Budget saved in rupees.");
+      onCancel?.();
     } catch {
       setMessage("Could not create the budget. It may already exist for that month.");
     } finally {
@@ -76,12 +98,21 @@ export function BudgetForm({ categories, onCreated }: BudgetFormProps) {
   }
 
   return (
-    <section className="panel">
-      <h2 className="section-title">Create budget</h2>
-      <p className="section-copy">
-        Set a monthly rupee limit for each expense category so reports and alerts become
-        decision-ready.
-      </p>
+    <section className={budget ? "expense-form-panel" : "panel"}>
+      <div className="form-heading-row">
+        <div>
+          <h2 className="section-title">{budget ? "Edit budget" : "Create budget"}</h2>
+          <p className="section-copy">
+            Set a monthly rupee limit for each expense category so reports and alerts become
+            decision-ready.
+          </p>
+        </div>
+        {onCancel ? (
+          <button className="icon-button" type="button" aria-label="Close budget form" onClick={onCancel}>
+            x
+          </button>
+        ) : null}
+      </div>
 
       <form className="expense-form" onSubmit={handleSubmit}>
         <label className="field">
@@ -163,7 +194,7 @@ export function BudgetForm({ categories, onCreated }: BudgetFormProps) {
 
         <div className="form-actions">
           <button className="button button-primary" type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Saving..." : "Add budget"}
+            {isSubmitting ? "Saving..." : budget ? "Save changes" : "Add budget"}
           </button>
           <span className="form-message">{message}</span>
         </div>

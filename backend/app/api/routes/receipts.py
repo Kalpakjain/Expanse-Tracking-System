@@ -1,10 +1,13 @@
-from fastapi import APIRouter, Depends, File, Form, UploadFile, status
+from uuid import UUID
+
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
 from app.db.models import User
-from app.schemas.receipt import ReceiptRead
-from app.services.receipts import create_receipt, list_receipts
+from app.schemas.receipt import ReceiptRead, ReceiptTransactionCreate
+from app.schemas.transaction import TransactionRead
+from app.services.receipts import create_receipt, create_transaction_from_receipt, list_receipts
 
 
 router = APIRouter()
@@ -27,3 +30,16 @@ async def upload_receipt(
     current_user: User = Depends(get_current_user),
 ) -> ReceiptRead:
     return await create_receipt(db, current_user, file, merchant_hint, amount_hint)
+
+
+@router.post("/{receipt_id}/transaction", response_model=TransactionRead, status_code=status.HTTP_201_CREATED)
+def post_receipt_to_ledger(
+    receipt_id: UUID,
+    payload: ReceiptTransactionCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> TransactionRead:
+    try:
+        return create_transaction_from_receipt(db, current_user, receipt_id, payload)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc

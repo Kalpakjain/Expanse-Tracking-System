@@ -112,6 +112,18 @@ def _ensure_local_user_columns() -> None:
                 connection.execute(text(f"ALTER TABLE {table_name} ADD COLUMN user_id VARCHAR(36)"))
         if "transactions" in table_columns and "account_id" not in table_columns["transactions"]:
             connection.execute(text("ALTER TABLE transactions ADD COLUMN account_id VARCHAR(36)"))
+        if "users" in table_columns and "email_verified" not in table_columns["users"]:
+            connection.execute(text("ALTER TABLE users ADD COLUMN email_verified BOOLEAN NOT NULL DEFAULT 1"))
+        if "users" in table_columns and "email_verification_code_hash" not in table_columns["users"]:
+            connection.execute(text("ALTER TABLE users ADD COLUMN email_verification_code_hash VARCHAR(255) NOT NULL DEFAULT ''"))
+        if "users" in table_columns and "email_verification_code_expires_at" not in table_columns["users"]:
+            connection.execute(text("ALTER TABLE users ADD COLUMN email_verification_code_expires_at DATETIME"))
+        if "users" in table_columns and "otp_request_window_started_at" not in table_columns["users"]:
+            connection.execute(text("ALTER TABLE users ADD COLUMN otp_request_window_started_at DATETIME"))
+        if "users" in table_columns and "otp_request_count" not in table_columns["users"]:
+            connection.execute(text("ALTER TABLE users ADD COLUMN otp_request_count INTEGER NOT NULL DEFAULT 0"))
+        if "users" in table_columns and "otp_attempt_count" not in table_columns["users"]:
+            connection.execute(text("ALTER TABLE users ADD COLUMN otp_attempt_count INTEGER NOT NULL DEFAULT 0"))
 
 
 def _assign_existing_rows_to_demo_user(session, demo_user_id: str) -> None:

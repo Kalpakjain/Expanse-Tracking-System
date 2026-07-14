@@ -1,4 +1,5 @@
 from fastapi.testclient import TestClient
+from uuid import uuid4
 
 from app.db.init_db import create_database_and_seed
 from app.main import app
@@ -40,10 +41,11 @@ def test_can_create_payment_account() -> None:
 
 
 def test_can_update_payment_account() -> None:
+    suffix = uuid4().hex[:8]
     create_response = client.post(
         "/api/v1/accounts/",
         json={
-            "name": "Editable Account",
+            "name": f"Editable Account {suffix}",
             "type": "wallet",
             "institution_name": "",
             "opening_balance": 100,
@@ -52,17 +54,13 @@ def test_can_update_payment_account() -> None:
             "is_default": False,
         },
     )
-    assert create_response.status_code in {201, 400}
-    if create_response.status_code == 400:
-        accounts = client.get("/api/v1/accounts/").json()
-        account = next(item for item in accounts if item["name"] == "Editable Account")
-    else:
-        account = create_response.json()
+    assert create_response.status_code == 201
+    account = create_response.json()
 
     update_response = client.put(
         f"/api/v1/accounts/{account['id']}",
         json={
-            "name": "Updated Editable Account",
+            "name": f"Updated Editable Account {suffix}",
             "type": "bank",
             "institution_name": "Updated Bank",
             "opening_balance": 300,
@@ -74,15 +72,16 @@ def test_can_update_payment_account() -> None:
 
     assert update_response.status_code == 200
     body = update_response.json()
-    assert body["name"] == "Updated Editable Account"
+    assert body["name"] == f"Updated Editable Account {suffix}"
     assert body["opening_balance"] == 300
 
 
 def test_can_deactivate_payment_account_when_another_account_exists() -> None:
+    suffix = uuid4().hex[:8]
     create_response = client.post(
         "/api/v1/accounts/",
         json={
-            "name": "Temporary Deactivate Account",
+            "name": f"Temporary Deactivate Account {suffix}",
             "type": "cash",
             "institution_name": "",
             "opening_balance": 0,
@@ -91,12 +90,8 @@ def test_can_deactivate_payment_account_when_another_account_exists() -> None:
             "is_default": False,
         },
     )
-    assert create_response.status_code in {201, 400}
-    if create_response.status_code == 400:
-        accounts = client.get("/api/v1/accounts/").json()
-        account = next(item for item in accounts if item["name"] == "Temporary Deactivate Account")
-    else:
-        account = create_response.json()
+    assert create_response.status_code == 201
+    account = create_response.json()
 
     response = client.delete(f"/api/v1/accounts/{account['id']}")
 

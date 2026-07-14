@@ -1,21 +1,27 @@
 import type {
   AuthLoginInput,
   AuthRegisterInput,
+  AuthRegisterResponse,
   AuthSession,
   Budget,
   Category,
   CreateBudgetInput,
   CreateCategoryInput,
   CreatePaymentAccountInput,
+  CreateReceiptTransactionInput,
   CreateTransactionInput,
   DashboardSummary,
   NotificationPreferences,
   NotificationPreferencesInput,
+  NotificationPreview,
   PaymentAccount,
   Receipt,
   ReportsOverview,
+  ResetPasswordInput,
   Transaction,
   UpdateTransactionInput,
+  VerifyEmailInput,
+  UpdateBudgetInput,
   User,
 } from "@/lib/types";
 
@@ -27,14 +33,17 @@ export function getStoredAuthToken() {
   if (typeof window === "undefined") {
     return null;
   }
-  return window.localStorage.getItem(AUTH_TOKEN_KEY);
+  return window.localStorage.getItem(AUTH_TOKEN_KEY) ?? window.sessionStorage.getItem(AUTH_TOKEN_KEY);
 }
 
-export function saveAuthSession(session: AuthSession) {
+export function saveAuthSession(session: AuthSession, rememberMe = true) {
   if (typeof window === "undefined") {
     return;
   }
-  window.localStorage.setItem(AUTH_TOKEN_KEY, session.access_token);
+  const persistentStorage = rememberMe ? window.localStorage : window.sessionStorage;
+  const temporaryStorage = rememberMe ? window.sessionStorage : window.localStorage;
+  temporaryStorage.removeItem(AUTH_TOKEN_KEY);
+  persistentStorage.setItem(AUTH_TOKEN_KEY, session.access_token);
 }
 
 export function clearAuthSession() {
@@ -42,6 +51,7 @@ export function clearAuthSession() {
     return;
   }
   window.localStorage.removeItem(AUTH_TOKEN_KEY);
+  window.sessionStorage.removeItem(AUTH_TOKEN_KEY);
 }
 
 function authHeaders(): Record<string, string> {
@@ -58,7 +68,7 @@ async function fetchJson<T>(path: string): Promise<T> {
   });
 
   if (!response.ok) {
-    throw new Error(`Request failed with status ${response.status}`);
+    throw new Error(await responseErrorMessage(response));
   }
 
   return response.json() as Promise<T>;
@@ -75,18 +85,57 @@ async function postJson<TResponse, TBody>(path: string, body: TBody): Promise<TR
   });
 
   if (!response.ok) {
-    throw new Error(`Request failed with status ${response.status}`);
+    throw new Error(await responseErrorMessage(response));
   }
 
   return response.json() as Promise<TResponse>;
 }
 
+async function responseErrorMessage(response: Response) {
+  try {
+    const body = await response.json();
+    if (typeof body.detail === "string") {
+      return body.detail;
+    }
+    if (Array.isArray(body.detail) && body.detail[0]?.msg) {
+      return body.detail[0].msg;
+    }
+  } catch {
+    // Fall through to the generic status message.
+  }
+  return `Request failed with status ${response.status}`;
+}
+
 export function register(payload: AuthRegisterInput) {
-  return postJson<AuthSession, AuthRegisterInput>("/api/v1/auth/register", payload);
+  return postJson<AuthRegisterResponse, AuthRegisterInput>("/api/v1/auth/register", payload);
 }
 
 export function login(payload: AuthLoginInput) {
   return postJson<AuthSession, AuthLoginInput>("/api/v1/auth/login", payload);
+}
+
+export function verifyEmail(payload: VerifyEmailInput) {
+  return postJson<AuthSession, VerifyEmailInput>("/api/v1/auth/verify-email", payload);
+}
+
+export function verifyOtp(payload: VerifyEmailInput) {
+  return postJson<AuthSession, VerifyEmailInput>("/api/v1/auth/verify-otp", payload);
+}
+
+export function sendOtp(email: string) {
+  return postJson<AuthRegisterResponse, { email: string }>("/api/v1/auth/send-otp", { email });
+}
+
+export function resendVerification(email: string) {
+  return postJson<AuthRegisterResponse, { email: string }>("/api/v1/auth/resend-verification", { email });
+}
+
+export function forgotPassword(email: string) {
+  return postJson<AuthRegisterResponse, { email: string }>("/api/v1/auth/forgot-password", { email });
+}
+
+export function resetPassword(payload: ResetPasswordInput) {
+  return postJson<AuthSession, ResetPasswordInput>("/api/v1/auth/reset-password", payload);
 }
 
 export function getCurrentUser() {
@@ -149,6 +198,35 @@ export function createTransaction(payload: CreateTransactionInput) {
   return postJson<Transaction, CreateTransactionInput>("/api/v1/transactions", payload);
 }
 
+export async function exportTransactionsCsv() {
+  const response = await fetch(`${API_BASE_URL}/api/v1/transactions/export`, {
+    headers: authHeaders(),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Request failed with status ${response.status}`);
+  }
+
+  return response.blob();
+}
+
+export async function importTransactionsCsv(file: File) {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const response = await fetch(`${API_BASE_URL}/api/v1/transactions/import`, {
+    method: "POST",
+    headers: authHeaders(),
+    body: formData,
+  });
+
+  if (!response.ok) {
+    throw new Error(`Request failed with status ${response.status}`);
+  }
+
+  return response.json() as Promise<{ imported_count: number; skipped_count: number }>;
+}
+
 export async function updateTransaction(transactionId: string, payload: UpdateTransactionInput) {
   const response = await fetch(`${API_BASE_URL}/api/v1/transactions/${transactionId}`, {
     method: "PUT",
@@ -185,6 +263,23 @@ export function createBudget(payload: CreateBudgetInput) {
   return postJson<Budget, CreateBudgetInput>("/api/v1/budgets", payload);
 }
 
+export async function updateBudget(budgetId: string, payload: UpdateBudgetInput) {
+  const response = await fetch(`${API_BASE_URL}/api/v1/budgets/${budgetId}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      ...authHeaders(),
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Request failed with status ${response.status}`);
+  }
+
+  return response.json() as Promise<Budget>;
+}
+
 export async function deleteBudget(budgetId: string) {
   const response = await fetch(`${API_BASE_URL}/api/v1/budgets/${budgetId}`, {
     method: "DELETE",
@@ -202,6 +297,10 @@ export function getReportsOverview() {
 
 export function getNotificationPreferences() {
   return fetchJson<NotificationPreferences>("/api/v1/settings/notifications");
+}
+
+export function getNotificationPreview() {
+  return fetchJson<NotificationPreview>("/api/v1/settings/notifications/preview");
 }
 
 export async function updateNotificationPreferences(
@@ -250,4 +349,11 @@ export async function uploadReceipt(payload: {
   }
 
   return response.json() as Promise<Receipt>;
+}
+
+export function createReceiptTransaction(receiptId: string, payload: CreateReceiptTransactionInput) {
+  return postJson<Transaction, CreateReceiptTransactionInput>(
+    `/api/v1/receipts/${receiptId}/transaction`,
+    payload,
+  );
 }

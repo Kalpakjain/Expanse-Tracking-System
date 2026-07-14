@@ -74,3 +74,31 @@ def test_update_missing_transaction_returns_not_found() -> None:
     )
 
     assert response.status_code == 404
+
+
+def test_can_export_transactions_as_csv() -> None:
+    response = client.get("/api/v1/transactions/export")
+
+    assert response.status_code == 200
+    assert "text/csv" in response.headers["content-type"]
+    assert "merchant_name" in response.text
+    assert "transaction_date" in response.text
+
+
+def test_can_import_transactions_from_csv() -> None:
+    csv_content = "\n".join(
+        [
+            "type,amount,currency_code,merchant_name,description,transaction_date,payment_method,notes,category_name,account_name",
+            f"expense,321.5,INR,CSV Merchant,Imported row,{date.today().isoformat()},UPI,CSV test,Food,Primary Wallet",
+        ]
+    )
+
+    response = client.post(
+        "/api/v1/transactions/import",
+        files={"file": ("transactions.csv", csv_content.encode("utf-8"), "text/csv")},
+    )
+
+    assert response.status_code == 201
+    body = response.json()
+    assert body["imported_count"] == 1
+    assert body["skipped_count"] == 0

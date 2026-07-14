@@ -9,7 +9,7 @@ Production services:
 - `frontend`: Next.js web app
 - `backend`: FastAPI API
 - `postgres`: relational database
-- `redis`: cache and future background-job support
+- `redis`: cache and optional background-job support
 
 ## Environment Variables
 
@@ -91,5 +91,5 @@ The codebase is deploy-ready, but a public launch still needs external credentia
 - domain and DNS control
 - database credentials
 - Redis credentials
-- future WhatsApp provider credentials
-- future object-storage credentials for receipt uploads
+- WhatsApp provider credentials, if real message delivery is enabled
+- object-storage credentials, if receipt file persistence moves beyond local metadata

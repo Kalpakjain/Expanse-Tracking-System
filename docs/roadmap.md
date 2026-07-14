@@ -31,6 +31,9 @@ Ship a usable expense tracker without AI dependencies.
 - user can see current month spending
 - user can compare spending against budgets
 
+Status:
+Completed locally.
+
 ## Phase 2: Smart Inputs
 
 ### Goal
@@ -49,6 +52,9 @@ Reduce manual effort for entering expenses.
 
 - user can upload a receipt and get a near-complete draft transaction
 - at least basic merchants are auto-categorized correctly
+
+Status:
+Completed locally with receipt review, category suggestions, duplicate checks, and ledger posting.
 
 ## Phase 3: Smart Insights
 
@@ -69,6 +75,9 @@ Help users understand and improve spending.
 - user receives useful, explainable insights
 - alerts feel accurate enough to trust
 
+Status:
+Completed locally with report insights, budget alerts, recurring reminders, notification previews, and savings suggestions.
+
 ## Phase 4: Scale and Polish
 
 - performance tuning
@@ -78,6 +87,9 @@ Help users understand and improve spending.
 - mobile responsiveness polish
 - deployment hardening
 - monitoring and backup strategy
+
+Status:
+Deployment-ready foundation is present. Public hosting still needs real infrastructure credentials, domains, and production secrets.
 
 ## Suggested Execution Order by Week
 

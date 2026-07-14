@@ -89,6 +89,7 @@ export type User = {
   email: string;
   full_name: string;
   is_demo: boolean;
+  email_verified: boolean;
   created_at: string;
 };
 
@@ -104,8 +105,25 @@ export type AuthRegisterInput = {
   password: string;
 };
 
+export type AuthRegisterResponse = {
+  email: string;
+  verification_required: boolean;
+  dev_verification_code: string | null;
+};
+
 export type AuthLoginInput = {
   email: string;
+  password: string;
+};
+
+export type VerifyEmailInput = {
+  email: string;
+  code: string;
+};
+
+export type ResetPasswordInput = {
+  email: string;
+  code: string;
   password: string;
 };
 
@@ -134,6 +152,8 @@ export type CreateBudgetInput = {
   currency_code: string;
   alert_threshold_percent: number;
 };
+
+export type UpdateBudgetInput = CreateBudgetInput;
 
 export type CategoryReportItem = {
   category_id: string;
@@ -185,6 +205,21 @@ export type NotificationPreferencesInput = {
   currency_code: string;
 };
 
+export type NotificationPreviewItem = {
+  kind: "daily_digest" | "budget_alert" | "weekly_summary" | "recurring_reminder";
+  title: string;
+  message: string;
+  severity: "low" | "medium" | "high";
+  enabled: boolean;
+};
+
+export type NotificationPreview = {
+  send_hour: number;
+  timezone: string;
+  phone_number: string;
+  messages: NotificationPreviewItem[];
+};
+
 export type Receipt = {
   id: string;
   file_name: string;
@@ -197,6 +232,18 @@ export type Receipt = {
   suggested_category_id: string | null;
   suggested_category_name: string | null;
   confidence_score: number;
+  duplicate_count: number;
   created_at: string;
   updated_at: string;
+};
+
+export type CreateReceiptTransactionInput = {
+  account_name: string;
+  account_id: string | null;
+  category_id: string | null;
+  amount: number | null;
+  transaction_date: string;
+  payment_method: string;
+  description: string;
+  notes: string;
 };

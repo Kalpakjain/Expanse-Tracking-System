@@ -41,6 +41,28 @@ created_at
 updated_at
 ```
 
+### payment_accounts
+
+Purpose:
+Store wallets, cash, bank accounts, UPI accounts, and cards used by transactions.
+
+Fields:
+
+```text
+id
+user_id
+name
+type
+institution_name
+opening_balance
+currency_code
+color
+is_default
+is_active
+created_at
+updated_at
+```
+
 ### transactions
 
 Purpose:
@@ -51,6 +73,7 @@ Fields:
 ```text
 id
 user_id
+account_id
 account_name
 category_id
 type                    # expense or income
@@ -117,7 +140,7 @@ updated_at
 ### notification_preferences
 
 Purpose:
-Store WhatsApp and digest preferences for future scheduled delivery.
+Store WhatsApp and digest preferences used by the local notification preview engine.
 
 Fields:
 
@@ -137,7 +160,8 @@ updated_at
 
 ## Current Relationships
 
-- one user has many transactions, budgets, receipts, and notification preferences
+- one user has many payment accounts, transactions, budgets, receipts, and notification preferences
+- one payment account has many transactions
 - one category has many transactions
 - one category has many budgets
 - global default categories can be shared by all users
@@ -148,16 +172,16 @@ updated_at
 The seed data currently creates:
 
 - one demo user
+- default payment accounts for Primary Wallet, Cash, and Credit Card
 - default categories for Food, Transport, Bills, and Salary
 - one sample INR expense transaction for the demo user
 - one sample monthly Food budget for the demo user
 - one default notification-preferences row for the demo user
 
-## Planned Next Tables
+## Possible Later Tables
 
-These are part of the longer-term design but are not implemented yet:
+These are optional production extensions once the local app is hosted:
 
-- `accounts`
 - `recurring_rules`
 - `alerts`
 - `ai_suggestions`

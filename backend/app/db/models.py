@@ -34,6 +34,12 @@ class User(Base, TimestampMixin):
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     is_demo: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    email_verified: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    email_verification_code_hash: Mapped[str] = mapped_column(String(255), nullable=False, default="")
+    email_verification_code_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=False), nullable=True)
+    otp_request_window_started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=False), nullable=True)
+    otp_request_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    otp_attempt_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
     categories: Mapped[list["Category"]] = relationship(back_populates="user")
     payment_accounts: Mapped[list["PaymentAccount"]] = relationship(back_populates="user")

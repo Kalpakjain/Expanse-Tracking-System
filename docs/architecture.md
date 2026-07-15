@@ -91,7 +91,6 @@ FastAPI also connects to:
 - `/transactions`
 - `/budgets`
 - `/reports`
-- `/settings/notifications`
 - `/receipts`
 - `/insights`
 - `/alerts`

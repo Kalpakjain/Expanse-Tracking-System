@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { BudgetForm } from "@/components/budget-form";
 import { deleteBudget, getReportsOverview } from "@/lib/api";
@@ -51,6 +51,42 @@ function buildCategorySpendBreakdown(transactions: Transaction[]) {
   return Array.from(totals.entries())
     .map(([name, metrics]) => ({ name, amount: metrics.amount, count: metrics.count }))
     .sort((left, right) => right.amount - left.amount);
+}
+
+function getMonthLabel(monthKey: string) {
+  const [year, month] = monthKey.split("-").map(Number);
+  return new Intl.DateTimeFormat("en-IN", { month: "short", year: "2-digit" }).format(
+    new Date(year, month - 1, 1),
+  );
+}
+
+function buildMonthlyAnalysis(transactions: Transaction[]) {
+  const monthlyTotals = new Map<string, { income: number; expense: number }>();
+
+  for (const transaction of transactions) {
+    const monthKey = transaction.transaction_date.slice(0, 7);
+    const current = monthlyTotals.get(monthKey) ?? { income: 0, expense: 0 };
+    if (transaction.type === "income") {
+      current.income += transaction.amount;
+    } else {
+      current.expense += transaction.amount;
+    }
+    monthlyTotals.set(monthKey, current);
+  }
+
+  const today = new Date();
+  return Array.from({ length: 6 }, (_, index) => {
+    const monthDate = new Date(today.getFullYear(), today.getMonth() - (5 - index), 1);
+    const monthKey = `${monthDate.getFullYear()}-${String(monthDate.getMonth() + 1).padStart(2, "0")}`;
+    const totals = monthlyTotals.get(monthKey) ?? { income: 0, expense: 0 };
+    return {
+      monthKey,
+      label: getMonthLabel(monthKey),
+      income: totals.income,
+      expense: totals.expense,
+      balance: totals.income - totals.expense,
+    };
+  });
 }
 
 export function ReportsWorkspace() {
@@ -105,6 +141,8 @@ export function ReportsWorkspace() {
   }, [loadReports]);
 
   const breakdown = overview.category_breakdown.length ? overview.category_breakdown : fallbackBreakdown;
+  const monthlyAnalysis = useMemo(() => buildMonthlyAnalysis(transactions), [transactions]);
+  const maxMonthlyExpense = Math.max(...monthlyAnalysis.map((month) => month.expense), 1);
   const filteredBudgets = overview.budgets.filter(
     (budget) => budget.month === selectedMonth && budget.year === selectedYear,
   );
@@ -125,36 +163,15 @@ export function ReportsWorkspace() {
 
   return (
     <main className="page-shell">
-      <section className="hero">
-        <article className="hero-card">
-          <span className="eyebrow">Reports</span>
-          <h1>See the patterns, not just the payments.</h1>
-          <p>
-            This page is where category context now lives. It turns raw entries into a spending
-            story you can actually review and act on.
-          </p>
-          <div className="hero-actions">
-            <span className="button button-primary">Reporting mode</span>
-            <span className="button button-secondary">{reportMessage || statusLabel}</span>
-          </div>
-        </article>
-
-        <aside className="hero-side">
-          <div className="hero-card side-card">
-            <h2>Moved from home</h2>
-            <p>
-              Category visibility now belongs here so the home page can stay focused on capture and
-              cleanup.
-            </p>
-          </div>
-          <div className="hero-card side-card">
-            <h2>Next reporting layer</h2>
-            <p>
-              Budget controls are now live here. The next layer is trend charts and month-over-month
-              comparisons without changing the information architecture again.
-            </p>
-          </div>
-        </aside>
+      <section className="page-header-compact">
+        <div>
+          <h1>Analytics</h1>
+          <p>Budgets, categories, and trends</p>
+        </div>
+        <div className="page-header-actions">
+          <span className="button button-primary">Reporting mode</span>
+          <span className="button button-secondary">{reportMessage || statusLabel}</span>
+        </div>
       </section>
 
       <section className="grid stats-grid">
@@ -180,6 +197,29 @@ export function ReportsWorkspace() {
             {overview.budgeted_categories} budgeted categories • {overview.over_budget_count} over budget
           </div>
         </article>
+      </section>
+
+      <section className="panel chart-panel">
+        <div className="panel-header">
+          <div>
+            <h2 className="section-title">Month-wise expenses</h2>
+            <p className="section-copy">Last six months of recorded spending.</p>
+          </div>
+        </div>
+        <div className="bar-chart" aria-label="Month-wise expense chart">
+          {monthlyAnalysis.map((month) => (
+            <div className="bar-column" key={month.monthKey}>
+              <div className="bar-track">
+                <span
+                  className="bar-fill"
+                  style={{ height: `${Math.max((month.expense / maxMonthlyExpense) * 100, 6)}%` }}
+                />
+              </div>
+              <div className="bar-label">{month.label}</div>
+              <div className="bar-value">{formatCurrency(month.expense, "INR")}</div>
+            </div>
+          ))}
+        </div>
       </section>
 
       <section className="grid content-grid">

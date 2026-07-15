@@ -207,6 +207,7 @@ export type GroupExpense = {
 
 export type CreateGroupExpenseInput = {
   group_id?: string;
+  paid_by: string | null;
   amount: number;
   description: string;
   category_id: string | null;
@@ -270,44 +271,6 @@ export type SmartInsight = {
   title: string;
   message: string;
   severity: "low" | "medium" | "high";
-};
-
-export type NotificationPreferences = {
-  id: string;
-  phone_number: string;
-  daily_digest_enabled: boolean;
-  budget_alerts_enabled: boolean;
-  weekly_report_enabled: boolean;
-  preferred_send_hour: number;
-  timezone: string;
-  currency_code: string;
-  created_at: string;
-  updated_at: string;
-};
-
-export type NotificationPreferencesInput = {
-  phone_number: string;
-  daily_digest_enabled: boolean;
-  budget_alerts_enabled: boolean;
-  weekly_report_enabled: boolean;
-  preferred_send_hour: number;
-  timezone: string;
-  currency_code: string;
-};
-
-export type NotificationPreviewItem = {
-  kind: "daily_digest" | "budget_alert" | "weekly_summary" | "recurring_reminder";
-  title: string;
-  message: string;
-  severity: "low" | "medium" | "high";
-  enabled: boolean;
-};
-
-export type NotificationPreview = {
-  send_hour: number;
-  timezone: string;
-  phone_number: string;
-  messages: NotificationPreviewItem[];
 };
 
 export type Receipt = {

@@ -1,14 +1,20 @@
 "use client";
 
-import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 
-import { createGroup, listGroups } from "@/lib/api";
+import { SplitExpenseWizard } from "@/components/split/split-expense-wizard";
+import { createGroup, getCurrentUser, getGroupBalances, listGroups } from "@/lib/api";
 import type { Group } from "@/lib/types";
 
 type GroupFormState = {
   name: string;
+};
+
+type GroupSummary = {
+  group: Group;
+  netBalance: number;
 };
 
 const initialState: GroupFormState = {
@@ -23,18 +29,79 @@ function memberInitials(name: string) {
     .join("");
 }
 
+function formatRs(amount: number) {
+  return `Rs ${Math.abs(amount).toFixed(2)}`;
+}
+
+function balanceLabel(amount: number) {
+  if (amount > 0) {
+    return `You'll get ${formatRs(amount)}`;
+  }
+  if (amount < 0) {
+    return `You'll pay ${formatRs(amount)}`;
+  }
+  return "Settled";
+}
+
+const avatarColors = ["#b0305c", "#1f2a44", "#a8823c", "#dfd5c7"];
+
+function renderAvatarStack(members: Group["members"]) {
+  const visibleMembers = members.length > 4 ? members.slice(0, 3) : members.slice(0, 4);
+  const hiddenCount = members.length - visibleMembers.length;
+
+  return (
+    <div className="avatar-stack">
+      {visibleMembers.map((member, index) => (
+        <div
+          key={member.user_id}
+          className="avatar-circle"
+          style={{
+            background: avatarColors[index % 4],
+            color: index % 4 === 3 ? "#211f1b" : "#fbf6ec",
+          }}
+        >
+          {memberInitials(member.full_name) || "M"}
+        </div>
+      ))}
+      {hiddenCount > 0 ? (
+        <div
+          className="avatar-circle"
+          style={{
+            background: avatarColors[3],
+            color: "#211f1b",
+          }}
+        >
+          +{hiddenCount}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export function SplitGroupsWorkspace() {
-  const [groups, setGroups] = useState<Group[]>([]);
+  const router = useRouter();
+  const createPanelRef = useRef<HTMLDivElement | null>(null);
+  const [groupSummaries, setGroupSummaries] = useState<GroupSummary[]>([]);
   const [form, setForm] = useState<GroupFormState>(initialState);
   const [memberInput, setMemberInput] = useState("");
   const [members, setMembers] = useState<string[]>([]);
   const [message, setMessage] = useState("Loading your groups...");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isWizardOpen, setIsWizardOpen] = useState(false);
 
   const loadGroups = useCallback(async (successMessage?: string) => {
     try {
-      const nextGroups = await listGroups();
-      setGroups(nextGroups);
+      const [currentUser, nextGroups] = await Promise.all([getCurrentUser(), listGroups()]);
+      const nextSummaries = await Promise.all(
+        nextGroups.map(async (group) => {
+          const balances = await getGroupBalances(group.id);
+          return {
+            group,
+            netBalance: balances.balances.find((balance) => balance.user_id === currentUser.id)?.net_balance ?? 0,
+          };
+        }),
+      );
+      setGroupSummaries(nextSummaries);
       setMessage(successMessage ?? "Groups synced from the backend.");
     } catch {
       setMessage("Could not load groups yet. Check that the backend is running.");
@@ -47,7 +114,7 @@ export function SplitGroupsWorkspace() {
 
   const suggestedMembers = useMemo(() => {
     const uniqueNames = new Map<string, string>();
-    groups.forEach((group) => {
+    groupSummaries.forEach(({ group }) => {
       group.members.forEach((member) => {
         const name = member.full_name.trim();
         if (name) {
@@ -56,7 +123,7 @@ export function SplitGroupsWorkspace() {
       });
     });
     return Array.from(uniqueNames.values()).sort((first, second) => first.localeCompare(second));
-  }, [groups]);
+  }, [groupSummaries]);
 
   const filteredSuggestions = useMemo(() => {
     const query = memberInput.trim().toLowerCase();
@@ -104,34 +171,27 @@ export function SplitGroupsWorkspace() {
 
   return (
     <main className="page-shell">
-      <section className="hero">
-        <article className="hero-card">
-          <span className="eyebrow">Groups</span>
-          <h1>Split shared expenses without losing track.</h1>
-          <p>
-            Create a group, add members by name, record shared spending, and review who owes whom
-            without waiting for every person to create an account.
-          </p>
-          <div className="hero-actions">
-            <span className="button button-primary">Split expenses</span>
-            <span className="button button-secondary">{message}</span>
-          </div>
-        </article>
-
-        <aside className="hero-side">
-          <div className="hero-card side-card">
-            <h2>Equal, percentage, custom</h2>
-            <p>Choose the split style per expense and validate totals before submitting.</p>
-          </div>
-          <div className="hero-card side-card">
-            <h2>Settle up</h2>
-            <p>Record payments between members and keep balances readable.</p>
-          </div>
-        </aside>
+      <section className="page-header-compact">
+        <div>
+          <h1>Groups</h1>
+          <p>Create and manage split groups</p>
+        </div>
+        <div className="page-header-actions">
+          <button className="button button-primary" type="button" onClick={() => setIsWizardOpen(true)}>
+            Split expense
+          </button>
+          <button
+            className="button button-secondary"
+            type="button"
+            onClick={() => createPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+          >
+            Create group
+          </button>
+          <span className="button button-secondary">{message}</span>
+        </div>
       </section>
 
-      <section className="grid content-grid">
-        <section className="panel">
+      <div className="split-card" ref={createPanelRef}>
           <div className="form-heading-row">
             <div>
               <h2 className="section-title">Create group</h2>
@@ -221,30 +281,61 @@ export function SplitGroupsWorkspace() {
               <span className="form-message">{message}</span>
             </div>
           </form>
-        </section>
+      </div>
 
-        <aside className="panel">
+      <div className="split-card">
           <h2 className="section-title">Your groups</h2>
           <p className="section-copy">Open a group to add expenses, settle up, and review balances.</p>
-          <div className="list">
-            {groups.length ? (
-              groups.map((group) => (
-                <Link className="list-item" href={`/split/groups/${group.id}`} key={group.id}>
-                  <div>
-                    <div className="item-title">{group.name}</div>
-                    <div className="item-subtitle">
-                      {group.members.length} members • Created {group.created_at.slice(0, 10)}
+          <div className="split-groups-grid">
+            {groupSummaries.length ? (
+              groupSummaries.map(({ group, netBalance }, index) => (
+                <div
+                  className="group-card"
+                  key={group.id}
+                  onClick={() => router.push(`/split/groups/${group.id}`)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      router.push(`/split/groups/${group.id}`);
+                    }
+                  }}
+                  role="button"
+                  tabIndex={0}
+                >
+                  <div className="balance-row-name">
+                    <div
+                      className="group-icon-tile"
+                      style={{
+                        background: index % 2 === 0 ? "var(--primary)" : "var(--accent)",
+                      }}
+                    >
+                      {index % 2 === 0 ? "G" : "S"}
+                    </div>
+                    <div>
+                      <div className="item-title">{group.name}</div>
+                      <div className="item-subtitle">{group.members.length} members</div>
+                      {renderAvatarStack(group.members)}
                     </div>
                   </div>
-                  <span className="button button-secondary compact-button">Open</span>
-                </Link>
+                  <span className={netBalance >= 0 ? "balance-positive" : "balance-negative"}>
+                    {balanceLabel(netBalance)}
+                  </span>
+                </div>
               ))
             ) : (
               <div className="empty-state">No groups yet. Create one to start splitting expenses.</div>
             )}
           </div>
-        </aside>
-      </section>
+      </div>
+
+      {isWizardOpen ? (
+        <SplitExpenseWizard
+          onClose={() => setIsWizardOpen(false)}
+          onCreated={() => {
+            void loadGroups("Split expense saved.");
+          }}
+        />
+      ) : null}
     </main>
   );
 }

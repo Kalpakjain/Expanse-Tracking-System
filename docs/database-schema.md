@@ -137,27 +137,6 @@ created_at
 updated_at
 ```
 
-### notification_preferences
-
-Purpose:
-Store WhatsApp and digest preferences used by the local notification preview engine.
-
-Fields:
-
-```text
-id
-user_id
-phone_number
-daily_digest_enabled
-budget_alerts_enabled
-weekly_report_enabled
-preferred_send_hour
-timezone
-currency_code
-created_at
-updated_at
-```
-
 ## Current Relationships
 
 - one user has many payment accounts, transactions, budgets, receipts, and notification preferences

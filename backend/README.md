@@ -51,9 +51,6 @@ For deployed environments, set `DATABASE_AUTO_CREATE_TABLES=false` and run migra
 - `GET /api/v1/budgets`
 - `POST /api/v1/budgets`
 - `DELETE /api/v1/budgets/{budget_id}`
-- `GET /api/v1/settings/notifications`
-- `PUT /api/v1/settings/notifications`
-- `GET /api/v1/settings/notifications/preview`
 - `GET /api/v1/receipts`
 - `POST /api/v1/receipts`
 - `POST /api/v1/receipts/{receipt_id}/transaction`

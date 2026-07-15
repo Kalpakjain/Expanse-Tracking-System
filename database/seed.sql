@@ -118,27 +118,3 @@ VALUES (
     TRUE
 )
 ON CONFLICT (user_id, category_id, month, year) DO NOTHING;
-
-INSERT INTO notification_preferences (
-    id,
-    user_id,
-    phone_number,
-    daily_digest_enabled,
-    budget_alerts_enabled,
-    weekly_report_enabled,
-    preferred_send_hour,
-    timezone,
-    currency_code
-)
-VALUES (
-    'cccccccc-cccc-cccc-cccc-cccccccccccc',
-    'dddddddd-dddd-dddd-dddd-dddddddddddd',
-    '',
-    TRUE,
-    TRUE,
-    FALSE,
-    20,
-    'Asia/Kolkata',
-    'INR'
-)
-ON CONFLICT (id) DO NOTHING;

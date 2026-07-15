@@ -66,26 +66,14 @@ export function SettingsWorkspace() {
 
   return (
     <main className="page-shell">
-      <section className="hero">
-        <article className="hero-card">
-          <span className="eyebrow">Settings</span>
-          <h1>Account controls.</h1>
-          <p>Manage your password and sign out from this device when you are done.</p>
-          <div className="hero-actions">
-            <span className="button button-secondary">{message}</span>
-          </div>
-        </article>
-
-        <aside className="hero-side">
-          <div className="hero-card side-card">
-            <h2>Password</h2>
-            <p>Use at least 8 characters and avoid reusing your current password.</p>
-          </div>
-          <div className="hero-card side-card">
-            <h2>Logout</h2>
-            <p>Signing out clears the stored token from this browser.</p>
-          </div>
-        </aside>
+      <section className="page-header-compact">
+        <div>
+          <h1>Account settings</h1>
+          <p>Password and logout controls</p>
+        </div>
+        <div className="page-header-actions">
+          <span className="button button-secondary">{message}</span>
+        </div>
       </section>
 
       <section className="grid content-grid">

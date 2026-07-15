@@ -48,15 +48,14 @@ export function SplitFriendsWorkspace() {
 
   return (
     <main className="page-shell">
-      <section className="hero">
-        <article className="hero-card">
-          <span className="eyebrow">Friends</span>
-          <h1>Balances by person.</h1>
-          <p>See every person you share a group with and the net balance across all shared groups.</p>
-          <div className="hero-actions">
-            <span className="button button-secondary">{message}</span>
-          </div>
-        </article>
+      <section className="page-header-compact">
+        <div>
+          <h1>Friends</h1>
+          <p>Balances by person</p>
+        </div>
+        <div className="page-header-actions">
+          <span className="button button-secondary">{message}</span>
+        </div>
       </section>
 
       <section className="panel">

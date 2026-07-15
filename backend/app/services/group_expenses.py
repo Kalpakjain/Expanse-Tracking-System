@@ -15,16 +15,19 @@ def create_group_expense(db: Session, user: User, payload: GroupExpenseCreate) -
     payer_member = _member_by_user_id(members, user.id)
     if payer_member is None:
         raise ValueError("Group not found.")
+    payer_id = str(payload.paid_by) if payload.paid_by is not None else user.id
+    if payer_id not in {member.user_id for member in members}:
+        raise ValueError("The selected payer is not a member of this group.")
 
     if payload.category_id is not None:
         category = db.get(Category, str(payload.category_id))
         if category is None or (category.user_id is not None and category.user_id != user.id):
             raise ValueError("Selected category does not exist.")
 
-    split_amounts = _calculate_split_amounts(payload, members, user.id)
+    split_amounts = _calculate_split_amounts(payload, members, payer_id)
     expense = GroupExpense(
         group_id=group.id,
-        paid_by=user.id,
+        paid_by=payer_id,
         amount=round(payload.amount, 2),
         description=payload.description.strip(),
         category_id=str(payload.category_id) if payload.category_id is not None else None,

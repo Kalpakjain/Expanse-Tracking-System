@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { SplitExpenseWizard } from "@/components/split/split-expense-wizard";
 import {
   getCurrentUser,
   getGroupBalances,
@@ -41,8 +42,63 @@ function balanceLabel(amount: number) {
   return "Settled";
 }
 
-function groupIcon(index: number) {
-  return index % 2 === 0 ? "map" : "home";
+const avatarColors = ["#b0305c", "#1f2a44", "#a8823c", "#dfd5c7"];
+
+function memberInitials(name: string) {
+  return name
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("");
+}
+
+function renderAvatarStack(members: Group["members"]) {
+  const visibleMembers = members.length > 4 ? members.slice(0, 3) : members.slice(0, 4);
+  const hiddenCount = members.length - visibleMembers.length;
+
+  return (
+    <div className="avatar-stack">
+      {visibleMembers.map((member, index) => (
+        <div
+          key={member.user_id}
+          className="avatar-circle"
+          style={{
+            background: avatarColors[index % 4],
+            color: index % 4 === 3 ? "#211f1b" : "#fbf6ec",
+          }}
+        >
+          {memberInitials(member.full_name) || "M"}
+        </div>
+      ))}
+      {hiddenCount > 0 ? (
+        <div
+          className="avatar-circle"
+          style={{
+            background: avatarColors[3],
+            color: "#211f1b",
+          }}
+        >
+          +{hiddenCount}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function renderBalanceAvatar(name: string, index: number) {
+  return (
+    <div
+      className="avatar-circle avatar-circle-sm"
+      style={{
+        background: avatarColors[index % 4],
+        color: index % 4 === 3 ? "#211f1b" : "#fbf6ec",
+      }}
+    >
+      {memberInitials(name) || "M"}
+    </div>
+  );
 }
 
 export function SplitOverviewWorkspace() {
@@ -50,6 +106,7 @@ export function SplitOverviewWorkspace() {
   const [groupSummaries, setGroupSummaries] = useState<GroupSummary[]>([]);
   const [activity, setActivity] = useState<ActivityItem[]>([]);
   const [message, setMessage] = useState("Loading split summary...");
+  const [isWizardOpen, setIsWizardOpen] = useState(false);
 
   const loadSplitOverview = useCallback(async () => {
     try {
@@ -117,71 +174,105 @@ export function SplitOverviewWorkspace() {
 
   return (
     <main className="page-shell split-overview-page">
-      <section className="split-overview-header">
+      <section className="page-header-compact">
         <div>
           <h1>Split</h1>
           <p>Shared expenses across all your groups</p>
         </div>
-        <div className="split-overview-actions">
+        <div className="page-header-actions">
+          <button className="button button-primary split-action-button" type="button" onClick={() => setIsWizardOpen(true)}>
+            Split expense
+          </button>
           <Link className="button button-secondary split-action-button" href="/split/friends">Settle up</Link>
           <Link className="button button-primary split-action-button" href="/split/groups">+ Create group</Link>
         </div>
       </section>
 
-      <section className="split-balance-grid">
-        <article className="split-balance-card split-receive-card">
-          <span>You&apos;ll receive</span>
-          <strong>{formatRs(totals.receive)}</strong>
-        </article>
-        <article className="split-balance-card split-pay-card">
-          <span>You&apos;ll pay</span>
-          <strong>{formatRs(totals.pay)}</strong>
-        </article>
-      </section>
+      <div className="split-card">
+        <div className="split-stat-grid">
+          <div className="split-stat-positive">
+            <div className="split-stat-label">You&apos;ll receive</div>
+            <div className="split-stat-value">{formatRs(totals.receive)}</div>
+          </div>
+          <div className="split-stat-negative">
+            <div className="split-stat-label">You&apos;ll pay</div>
+            <div className="split-stat-value">{formatRs(totals.pay)}</div>
+          </div>
+        </div>
+      </div>
 
       <section className="split-overview-grid">
-        <article>
+        <div className="split-card">
           <h2>Your groups</h2>
-          <div className="split-card-list">
-            {groupSummaries.length ? (
-              groupSummaries.map(({ group, netBalance }, index) => (
-                <Link className="split-group-card" href={`/split/groups/${group.id}`} key={group.id}>
-                  <span className="split-group-icon nav-icon" aria-hidden="true">{groupIcon(index)}</span>
-                  <div className="split-group-meta">
-                    <strong>{group.name}</strong>
-                    <span>{group.members.length} members</span>
-                  </div>
-                  <div className={netBalance < 0 ? "split-pay-text" : "split-receive-text"}>{balanceLabel(netBalance)}</div>
-                </Link>
-              ))
-            ) : (
-              <div className="empty-state">No split groups yet. Create one to start splitting expenses.</div>
-            )}
-          </div>
-        </article>
-
-        <aside>
-          <h2>Recent activity</h2>
-          <div className="split-activity-card">
-            {activity.length ? (
-              activity.slice(0, 3).map((item) => (
-                <div className="split-activity-preview-row" key={`${item.type}-${item.id}`}>
-                  <span className="split-activity-dot nav-icon" aria-hidden="true">
-                    {item.type === "settlement" ? "payments" : "receipt_long"}
+          {groupSummaries.length ? (
+            groupSummaries.map(({ group, netBalance }, index) => (
+              <Link className="balance-row" href={`/split/groups/${group.id}`} key={group.id}>
+                <div className="balance-row-name">
+                  {renderAvatarStack(group.members)}
+                  <span>
+                    {group.name} • {group.members.length} members
                   </span>
-                  <div>
-                    <strong>{item.description}</strong>
-                    <span>{item.groupName} • {item.date.slice(0, 10)}</span>
-                  </div>
                 </div>
-              ))
-            ) : (
-              <div className="empty-state compact-empty">No activity yet.</div>
-            )}
-          </div>
+                <span className={netBalance >= 0 ? "balance-positive" : "balance-negative"}>
+                  {balanceLabel(netBalance)}
+                </span>
+              </Link>
+            ))
+          ) : (
+            <div className="empty-state">No split groups yet. Create one to start splitting expenses.</div>
+          )}
+        </div>
+
+        <div className="split-card">
+          <h2>Balances</h2>
+          {groupSummaries.length ? (
+            groupSummaries.map(({ group, netBalance }, index) => (
+              <div className="balance-row" key={group.id}>
+                <div className="balance-row-name">
+                  {renderBalanceAvatar(group.name, index)}
+                  <span>{group.name}</span>
+                </div>
+                <span className={netBalance >= 0 ? "balance-positive" : "balance-negative"}>
+                  {balanceLabel(netBalance)}
+                </span>
+              </div>
+            ))
+          ) : (
+            <div className="empty-state compact-empty">No balances yet.</div>
+          )}
+        </div>
+
+        <div className="split-card">
+          <h2>Recent activity</h2>
+          {activity.length ? (
+            activity.slice(0, 3).map((item, index) => (
+              <div className="balance-row" key={`${item.type}-${item.id}`}>
+                <div className="balance-row-name">
+                  {renderBalanceAvatar(item.description, index)}
+                  <span>
+                    {item.description} • {item.groupName}
+                  </span>
+                </div>
+                <span className={item.type === "settlement" ? "balance-positive" : "balance-negative"}>
+                  {formatRs(item.amount)}
+                </span>
+              </div>
+            ))
+          ) : (
+            <div className="empty-state compact-empty">No activity yet.</div>
+          )}
           <p className="split-sync-note">{user ? `Signed in as ${user.full_name}. ` : ""}{message}</p>
-        </aside>
+        </div>
       </section>
+
+      {isWizardOpen ? (
+        <SplitExpenseWizard
+          onClose={() => setIsWizardOpen(false)}
+          onCreated={() => {
+            void loadSplitOverview();
+          }}
+        />
+      ) : null}
     </main>
   );
 }

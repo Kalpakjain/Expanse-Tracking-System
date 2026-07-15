@@ -46,7 +46,6 @@ class User(Base, TimestampMixin):
     transactions: Mapped[list["Transaction"]] = relationship(back_populates="user")
     receipts: Mapped[list["Receipt"]] = relationship(back_populates="user")
     budgets: Mapped[list["Budget"]] = relationship(back_populates="user")
-    notification_preferences: Mapped[list["NotificationPreference"]] = relationship(back_populates="user")
     groups_created: Mapped[list["Group"]] = relationship(back_populates="creator")
     group_memberships: Mapped[list["GroupMember"]] = relationship(back_populates="user")
     group_expenses_paid: Mapped[list["GroupExpense"]] = relationship(back_populates="payer")
@@ -155,22 +154,6 @@ class Budget(Base, TimestampMixin):
 
     user: Mapped[User] = relationship(back_populates="budgets")
     category: Mapped[Category] = relationship(back_populates="budgets")
-
-
-class NotificationPreference(Base, TimestampMixin):
-    __tablename__ = "notification_preferences"
-
-    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
-    user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
-    phone_number: Mapped[str] = mapped_column(String(20), nullable=False, default="")
-    daily_digest_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
-    budget_alerts_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
-    weekly_report_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    preferred_send_hour: Mapped[int] = mapped_column(Integer, nullable=False, default=20)
-    timezone: Mapped[str] = mapped_column(String(64), nullable=False, default="Asia/Kolkata")
-    currency_code: Mapped[str] = mapped_column(String(3), nullable=False, default="INR")
-
-    user: Mapped[User] = relationship(back_populates="notification_preferences")
 
 
 class Group(Base, TimestampMixin):

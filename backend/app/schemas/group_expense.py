@@ -12,6 +12,7 @@ class GroupExpenseSplitInput(BaseModel):
 
 class GroupExpenseCreate(BaseModel):
     group_id: UUID
+    paid_by: UUID | None = None
     amount: float = Field(gt=0)
     description: str = Field(max_length=160)
     category_id: UUID | None = None

@@ -11,42 +11,6 @@ import type { Category, PaymentAccount, Transaction } from "@/lib/types";
 
 const chartFallbackColors = ["#B0305C", "#1F2A44", "#A8823C", "#D6426B", "#6D78CC", "#10B981"];
 
-function getMonthLabel(monthKey: string) {
-  const [year, month] = monthKey.split("-").map(Number);
-  return new Intl.DateTimeFormat("en-IN", { month: "short", year: "2-digit" }).format(
-    new Date(year, month - 1, 1),
-  );
-}
-
-function buildMonthlyAnalysis(transactions: Transaction[]) {
-  const monthlyTotals = new Map<string, { income: number; expense: number }>();
-
-  for (const transaction of transactions) {
-    const monthKey = transaction.transaction_date.slice(0, 7);
-    const current = monthlyTotals.get(monthKey) ?? { income: 0, expense: 0 };
-    if (transaction.type === "income") {
-      current.income += transaction.amount;
-    } else {
-      current.expense += transaction.amount;
-    }
-    monthlyTotals.set(monthKey, current);
-  }
-
-  const today = new Date();
-  return Array.from({ length: 6 }, (_, index) => {
-    const monthDate = new Date(today.getFullYear(), today.getMonth() - (5 - index), 1);
-    const monthKey = `${monthDate.getFullYear()}-${String(monthDate.getMonth() + 1).padStart(2, "0")}`;
-    const totals = monthlyTotals.get(monthKey) ?? { income: 0, expense: 0 };
-    return {
-      monthKey,
-      label: getMonthLabel(monthKey),
-      income: totals.income,
-      expense: totals.expense,
-      balance: totals.income - totals.expense,
-    };
-  });
-}
-
 function buildCategoryAnalysis(transactions: Transaction[], categories: Category[]) {
   const categoryColors = new Map(categories.map((category) => [category.name, category.color]));
   const categoryTotals = new Map<string, { amount: number; count: number; color: string }>();
@@ -72,21 +36,42 @@ function buildCategoryAnalysis(transactions: Transaction[], categories: Category
     .sort((left, right) => right.amount - left.amount);
 }
 
-function buildPieGradient(categories: ReturnType<typeof buildCategoryAnalysis>) {
+function buildCurrentMonthSummary(transactions: Transaction[]) {
+  const today = new Date();
+  const currentMonthKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
+
+  return transactions.reduce(
+    (totals, transaction) => {
+      if (transaction.transaction_date.slice(0, 7) !== currentMonthKey) {
+        return totals;
+      }
+
+      if (transaction.type === "income") {
+        totals.income += transaction.amount;
+      } else {
+        totals.expense += transaction.amount;
+      }
+      totals.balance = totals.income - totals.expense;
+      return totals;
+    },
+    { income: 0, expense: 0, balance: 0 },
+  );
+}
+
+function buildRingSegments(categories: ReturnType<typeof buildCategoryAnalysis>) {
+  const radius = 80;
+  const circumference = 2 * Math.PI * radius;
   const total = categories.reduce((sum, category) => sum + category.amount, 0);
-  if (!total) {
-    return "conic-gradient(#E5E7EB 0deg 360deg)";
-  }
-
+  const gap = total ? circumference * 0.012 : 0;
   let cursor = 0;
-  const slices = categories.map((category) => {
-    const start = cursor;
-    const end = cursor + (category.amount / total) * 360;
-    cursor = end;
-    return `${category.color} ${start.toFixed(2)}deg ${end.toFixed(2)}deg`;
-  });
 
-  return `conic-gradient(${slices.join(", ")})`;
+  return categories.map((category) => {
+    const rawLength = total ? (category.amount / total) * circumference : 0;
+    const length = Math.max(rawLength - gap, 0);
+    const offset = circumference - cursor;
+    cursor += rawLength;
+    return { ...category, radius, circumference, length, offset };
+  });
 }
 
 export function HomeWorkspace() {
@@ -197,22 +182,13 @@ export function HomeWorkspace() {
     selectedAccountId === "all"
       ? transactions
       : transactions.filter((transaction) => transaction.account_id === selectedAccountId);
-  const monthlyAnalysis = useMemo(() => buildMonthlyAnalysis(filteredTransactions), [filteredTransactions]);
   const categoryAnalysis = useMemo(
     () => buildCategoryAnalysis(filteredTransactions, categories),
     [categories, filteredTransactions],
   );
-  const maxMonthlyExpense = Math.max(...monthlyAnalysis.map((month) => month.expense), 1);
   const totalExpense = categoryAnalysis.reduce((sum, category) => sum + category.amount, 0);
-  const pieGradient = buildPieGradient(categoryAnalysis);
   const topCategory = categoryAnalysis[0];
-  const currentMonth = monthlyAnalysis[monthlyAnalysis.length - 1] ?? {
-    income: 0,
-    expense: 0,
-    balance: 0,
-    label: "This month",
-    monthKey: "",
-  };
+  const currentMonth = useMemo(() => buildCurrentMonthSummary(filteredTransactions), [filteredTransactions]);
   const monthlySavings = Math.max(currentMonth.income - currentMonth.expense, 0);
   const savingsRate = currentMonth.income
     ? Math.round((monthlySavings / currentMonth.income) * 100)
@@ -220,15 +196,12 @@ export function HomeWorkspace() {
 
   return (
     <main className="page-shell">
-      <section className="dashboard-topbar">
-        <div className="dashboard-welcome">
-          <div className="dashboard-avatar">FT</div>
-          <div>
-            <p>Welcome back</p>
-            <h1>Here is your financial overview for today.</h1>
-          </div>
+      <section className="page-header-compact">
+        <div>
+          <h1>Dashboard</h1>
+          <p>Your financial overview today</p>
         </div>
-        <div className="dashboard-toolbar">
+        <div className="page-header-actions">
           <span className="status-chip">
             <span className="material-symbols-outlined" aria-hidden="true">cloud_done</span>
             {statusLabel}
@@ -260,7 +233,7 @@ export function HomeWorkspace() {
             </span>
             <span>this month</span>
           </div>
-          <div className="hero-actions dashboard-actions">
+          <div className="dashboard-actions">
             <button
               className="button button-primary"
               type="button"
@@ -332,8 +305,29 @@ export function HomeWorkspace() {
             </select>
           </div>
           <div className="spending-overview">
-            <div className="pie-chart" style={{ background: pieGradient }}>
-              <span>{categoryAnalysis.length}</span>
+            <div className="ring-chart-wrap">
+              <svg viewBox="0 0 200 200" className="ring-chart-svg">
+                <circle cx="100" cy="100" r="80" fill="none" stroke="var(--line)" strokeWidth="20" />
+                {buildRingSegments(categoryAnalysis).map((segment) => (
+                  <circle
+                    key={segment.name}
+                    cx="100"
+                    cy="100"
+                    r={segment.radius}
+                    fill="none"
+                    stroke={segment.color}
+                    strokeWidth="20"
+                    strokeLinecap="round"
+                    strokeDasharray={`${segment.length} ${segment.circumference}`}
+                    strokeDashoffset={segment.offset}
+                    transform="rotate(-90 100 100)"
+                  />
+                ))}
+              </svg>
+              <div className="ring-chart-center">
+                <span className="ring-chart-label">This month expense</span>
+                <strong className="ring-chart-value">{formatCurrency(totalExpense, "INR")}</strong>
+              </div>
             </div>
             <div className="category-legend spending-legend">
               {categoryAnalysis.length ? (
@@ -394,31 +388,7 @@ export function HomeWorkspace() {
         </aside>
       </section>
 
-      <section className="grid content-grid">
-        <article className="panel chart-panel">
-          <div className="panel-header">
-            <div>
-              <h2 className="section-title">Month-wise expenses</h2>
-              <p className="section-copy">Last six months of recorded spending.</p>
-            </div>
-          </div>
-          <div className="bar-chart" aria-label="Month-wise expense chart">
-            {monthlyAnalysis.map((month) => (
-              <div className="bar-column" key={month.monthKey}>
-                <div className="bar-track">
-                  <span
-                    className="bar-fill"
-                    style={{ height: `${Math.max((month.expense / maxMonthlyExpense) * 100, 6)}%` }}
-                  />
-                </div>
-                <div className="bar-label">{month.label}</div>
-                <div className="bar-value">{formatCurrency(month.expense, "INR")}</div>
-              </div>
-            ))}
-          </div>
-        </article>
-
-        <aside className="panel chart-panel">
+      <section className="panel chart-panel">
           <h2 className="section-title">Recent transactions</h2>
           <p className="section-copy">Latest records with edit and delete support.</p>
           <div className="list">
@@ -465,7 +435,6 @@ export function HomeWorkspace() {
               </div>
             )}
           </div>
-        </aside>
       </section>
 
       <section className="grid content-grid">

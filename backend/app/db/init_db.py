@@ -2,7 +2,7 @@ from datetime import date
 
 from sqlalchemy import inspect, select, text
 
-from app.db.models import Budget, Category, NotificationPreference, PaymentAccount, Receipt, Transaction
+from app.db.models import Budget, Category, PaymentAccount, Receipt, Transaction
 from app.db.session import SessionLocal, create_all_tables, engine
 from app.core.config import settings
 from app.services.auth import get_demo_user
@@ -74,24 +74,6 @@ def create_database_and_seed() -> None:
             )
             session.commit()
 
-        has_notification_preferences = (
-            session.scalar(select(NotificationPreference.id).limit(1)) is not None
-        )
-        if not has_notification_preferences:
-            session.add(
-                NotificationPreference(
-                    user_id=demo_user.id,
-                    phone_number="",
-                    daily_digest_enabled=True,
-                    budget_alerts_enabled=True,
-                    weekly_report_enabled=False,
-                    preferred_send_hour=20,
-                    timezone="Asia/Kolkata",
-                    currency_code="INR",
-                )
-            )
-            session.commit()
-
         _assign_existing_rows_to_demo_user(session, demo_user.id)
 
 
@@ -104,7 +86,7 @@ def _ensure_local_user_columns() -> None:
         table_name: {column["name"] for column in inspector.get_columns(table_name)}
         for table_name in inspector.get_table_names()
     }
-    user_scoped_tables = ["categories", "payment_accounts", "transactions", "receipts", "budgets", "notification_preferences"]
+    user_scoped_tables = ["categories", "payment_accounts", "transactions", "receipts", "budgets"]
 
     with engine.begin() as connection:
         for table_name in user_scoped_tables:
@@ -130,9 +112,6 @@ def _assign_existing_rows_to_demo_user(session, demo_user_id: str) -> None:
     session.query(Transaction).filter(Transaction.user_id.is_(None)).update({Transaction.user_id: demo_user_id})
     session.query(Receipt).filter(Receipt.user_id.is_(None)).update({Receipt.user_id: demo_user_id})
     session.query(Budget).filter(Budget.user_id.is_(None)).update({Budget.user_id: demo_user_id})
-    session.query(NotificationPreference).filter(NotificationPreference.user_id.is_(None)).update(
-        {NotificationPreference.user_id: demo_user_id}
-    )
     default_account_id = _default_account_id(session, demo_user_id)
     if default_account_id:
         session.query(Transaction).filter(Transaction.user_id == demo_user_id, Transaction.account_id.is_(None)).update(

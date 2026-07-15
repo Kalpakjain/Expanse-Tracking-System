@@ -85,20 +85,6 @@ CREATE TABLE IF NOT EXISTS receipts (
     updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS notification_preferences (
-    id UUID PRIMARY KEY,
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    phone_number VARCHAR(20) NOT NULL DEFAULT '',
-    daily_digest_enabled BOOLEAN NOT NULL DEFAULT TRUE,
-    budget_alerts_enabled BOOLEAN NOT NULL DEFAULT TRUE,
-    weekly_report_enabled BOOLEAN NOT NULL DEFAULT FALSE,
-    preferred_send_hour INTEGER NOT NULL DEFAULT 20 CHECK (preferred_send_hour BETWEEN 0 AND 23),
-    timezone VARCHAR(64) NOT NULL DEFAULT 'Asia/Kolkata',
-    currency_code CHAR(3) NOT NULL DEFAULT 'INR',
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
-);
-
 CREATE INDEX IF NOT EXISTS idx_transactions_date ON transactions(transaction_date);
 CREATE INDEX IF NOT EXISTS idx_transactions_user_date ON transactions(user_id, transaction_date);
 CREATE INDEX IF NOT EXISTS idx_transactions_category_date ON transactions(category_id, transaction_date);

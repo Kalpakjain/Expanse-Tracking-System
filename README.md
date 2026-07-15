@@ -1,13 +1,13 @@
 # Smart Expense Tracker
 
-An INR-first full-stack expense tracker that starts with reliable manual finance operations and grows into budgeting, notifications, OCR, and AI-assisted insights.
+An INR-first full-stack expense tracker that starts with reliable manual finance operations and grows into budgeting, OCR, and AI-assisted insights.
 
 ## Current Status
 
 The repository now includes a working product foundation:
 
-- `frontend/`: multi-page Next.js experience for dashboard, categories, reports, receipts, accounts, notifications, and savings
-- `backend/`: FastAPI API with auth, accounts, categories, transactions, CSV tools, budgets, reports, receipts, and notification previews
+- `frontend/`: multi-page Next.js experience for dashboard, categories, reports, receipts, accounts, and savings
+- `backend/`: FastAPI API with auth, accounts, categories, transactions, CSV tools, budgets, reports, and receipts
 - `database/`: PostgreSQL reference schema and seed files aligned with the current MVP
 - `infra/`: Docker-based local and deployment-friendly runtime
 - `docs/`: architecture, roadmap, project layers, deployment, and workflow guides
@@ -20,17 +20,15 @@ The current MVP foundation already includes:
 - add-expense form wired to the backend flow
 - transaction CSV import/export from the dashboard
 - signup/login API with bearer-token sessions
-- user-scoped transactions, budgets, receipts, and notification settings
+- user-scoped transactions, budgets, and receipts
 - category creation from the dashboard
 - transaction deletion from the dashboard
-- multi-section frontend navigation for home, categories, reports, WhatsApp notifications, and about
+- multi-section frontend navigation for home, categories, reports, receipts, split expenses, and about
 - monthly rupee budgets with backend persistence
 - report overview with category breakdown and budget utilization
-- persisted WhatsApp notification preferences
 - backend-generated smart insights for reports
 - receipt upload workflow with review, category suggestions, duplicate checks, and ledger posting
 - data-backed bank connections and savings transfer pages
-- local notification preview engine for daily digests, budget alerts, weekly summaries, and recurring reminders
 - health and readiness checks for deployment probes
 - production-oriented Dockerfiles and GitHub Actions CI
 - Alembic migrations for production database setup
@@ -56,7 +54,7 @@ Transaction logging, categories, payment context, and clean bookkeeping.
 Budgets, category-based reports, and monthly spending review in INR.
 
 3. `Automation Layer`
-WhatsApp preferences, scheduled digests, and budget alert plumbing.
+Receipt workflows, recurring expense detection, and budget alert rules.
 
 4. `Intelligence Layer`
 Receipt OCR, AI categorization, anomaly detection, and natural-language insights.
@@ -126,7 +124,6 @@ smart-expense-tracker/
 - `/receipts`: receipt upload, review, duplicate warning, and ledger posting
 - `/bank-connections`: local account connection and balance management
 - `/savings-transfer`: savings suggestions from budgets and balances
-- `/whatsapp-notifications`: notification preferences and local message previews
 - `/about`: product direction and app overview
 
 ## Local Development
@@ -188,9 +185,6 @@ npm run dev
 - `GET /api/v1/budgets`
 - `POST /api/v1/budgets`
 - `DELETE /api/v1/budgets/{budget_id}`
-- `GET /api/v1/settings/notifications`
-- `PUT /api/v1/settings/notifications`
-- `GET /api/v1/settings/notifications/preview`
 - `GET /api/v1/receipts`
 - `POST /api/v1/receipts`
 - `POST /api/v1/receipts/{receipt_id}/transaction`
@@ -212,7 +206,6 @@ To make the app truly public, we still need real deployment credentials and runt
 - backend public URL and allowed frontend origins
 - PostgreSQL
 - Redis
-- WhatsApp provider credentials, if real message delivery is enabled
 - object storage credentials, if receipt file persistence moves beyond local metadata
 
 ## Initial Build Order

@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { FormEvent } from "react";
 
+import { SplitExpenseWizard } from "@/components/split/split-expense-wizard";
 import {
-  createGroupExpense,
   createSettlement,
   getGroup,
   getGroupBalances,
@@ -14,37 +14,16 @@ import {
 } from "@/lib/api";
 import { formatCurrency } from "@/lib/format";
 import type {
-  CreateGroupExpenseInput,
   Group,
   GroupBalanceRead,
   GroupExpense,
   Settlement,
 } from "@/lib/types";
 
-type ExpenseFormState = {
-  amount: string;
-  description: string;
-  expense_date: string;
-  paid_by: string;
-  split_type: "equal" | "percentage" | "custom";
-  splits: Record<string, string>;
-};
-
 type SettlementFormState = {
   to_user_id: string;
   amount: string;
   note: string;
-};
-
-const today = new Date().toISOString().slice(0, 10);
-
-const initialExpenseForm: ExpenseFormState = {
-  amount: "",
-  description: "",
-  expense_date: today,
-  paid_by: "",
-  split_type: "equal",
-  splits: {},
 };
 
 const initialSettlementForm: SettlementFormState = {
@@ -53,19 +32,67 @@ const initialSettlementForm: SettlementFormState = {
   note: "",
 };
 
-function validateSplitTotal(form: ExpenseFormState, group: Group | null) {
-  if (!group || form.split_type === "equal") {
-    return "";
-  }
+const avatarColors = ["#b0305c", "#1f2a44", "#a8823c", "#dfd5c7"];
 
-  const total = group.members.reduce((sum, member) => sum + Number(form.splits[member.user_id] || 0), 0);
-  if (form.split_type === "percentage" && Math.abs(total - 100) > 0.5) {
-    return "Percentage splits must total 100.";
-  }
-  if (form.split_type === "custom" && Math.abs(total - Number(form.amount || 0)) > 0.01) {
-    return "Custom splits must total the expense amount.";
-  }
-  return "";
+function formatRs(amount: number) {
+  return `Rs ${Math.abs(amount).toFixed(2)}`;
+}
+
+function memberInitials(name: string) {
+  return name
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("");
+}
+
+function renderAvatarStack(members: Group["members"]) {
+  const visibleMembers = members.length > 4 ? members.slice(0, 3) : members.slice(0, 4);
+  const hiddenCount = members.length - visibleMembers.length;
+
+  return (
+    <div className="avatar-stack">
+      {visibleMembers.map((member, index) => (
+        <div
+          key={member.user_id}
+          className="avatar-circle"
+          style={{
+            background: avatarColors[index % 4],
+            color: index % 4 === 3 ? "#211f1b" : "#fbf6ec",
+          }}
+        >
+          {memberInitials(member.full_name) || "M"}
+        </div>
+      ))}
+      {hiddenCount > 0 ? (
+        <div
+          className="avatar-circle"
+          style={{
+            background: avatarColors[3],
+            color: "#211f1b",
+          }}
+        >
+          +{hiddenCount}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function renderBalanceAvatar(name: string, index: number) {
+  return (
+    <div
+      className="avatar-circle avatar-circle-sm"
+      style={{
+        background: avatarColors[index % 4],
+        color: index % 4 === 3 ? "#211f1b" : "#fbf6ec",
+      }}
+    >
+      {memberInitials(name) || "M"}
+    </div>
+  );
 }
 
 export function SplitGroupDetailWorkspace({ groupId }: { groupId: string }) {
@@ -73,11 +100,10 @@ export function SplitGroupDetailWorkspace({ groupId }: { groupId: string }) {
   const [expenses, setExpenses] = useState<GroupExpense[]>([]);
   const [balances, setBalances] = useState<GroupBalanceRead>({ group_id: groupId, balances: [] });
   const [settlements, setSettlements] = useState<Settlement[]>([]);
-  const [expenseForm, setExpenseForm] = useState<ExpenseFormState>(initialExpenseForm);
   const [settlementForm, setSettlementForm] = useState<SettlementFormState>(initialSettlementForm);
   const [message, setMessage] = useState("Loading group...");
-  const [isExpenseSubmitting, setIsExpenseSubmitting] = useState(false);
   const [isSettlementSubmitting, setIsSettlementSubmitting] = useState(false);
+  const [isExpenseWizardOpen, setIsExpenseWizardOpen] = useState(false);
 
   const loadGroup = useCallback(async (successMessage?: string) => {
     try {
@@ -96,10 +122,6 @@ export function SplitGroupDetailWorkspace({ groupId }: { groupId: string }) {
         ...current,
         to_user_id: current.to_user_id || nextGroup.members[0]?.user_id || "",
       }));
-      setExpenseForm((current) => ({
-        ...current,
-        paid_by: current.paid_by || nextGroup.members[0]?.user_id || "",
-      }));
     } catch {
       setMessage("Could not load this group yet.");
     }
@@ -108,43 +130,6 @@ export function SplitGroupDetailWorkspace({ groupId }: { groupId: string }) {
   useEffect(() => {
     void loadGroup();
   }, [loadGroup]);
-
-  const splitValidationMessage = useMemo(() => validateSplitTotal(expenseForm, group), [expenseForm, group]);
-
-  async function handleExpenseSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (splitValidationMessage) {
-      setMessage(splitValidationMessage);
-      return;
-    }
-
-    setIsExpenseSubmitting(true);
-    setMessage("Saving group expense...");
-
-    try {
-      const payload: CreateGroupExpenseInput = {
-        amount: Number(expenseForm.amount),
-        description: expenseForm.description,
-        category_id: null,
-        expense_date: expenseForm.expense_date,
-        split_type: expenseForm.split_type,
-        splits:
-          expenseForm.split_type === "equal" || !group
-            ? null
-            : group.members.map((member) => ({
-                user_id: member.user_id,
-                value: Number(expenseForm.splits[member.user_id] || 0),
-              })),
-      };
-      await createGroupExpense(groupId, payload);
-      setExpenseForm(initialExpenseForm);
-      await loadGroup("Group expense saved.");
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Could not save the group expense.");
-    } finally {
-      setIsExpenseSubmitting(false);
-    }
-  }
 
   async function handleSettlementSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -168,164 +153,45 @@ export function SplitGroupDetailWorkspace({ groupId }: { groupId: string }) {
 
   return (
     <main className="page-shell">
-      <section className="hero">
-        <article className="hero-card">
-          <span className="eyebrow">Split expenses</span>
+      <section className="page-header-compact">
+        <div>
           <h1>{group?.name ?? "Group workspace"}</h1>
-          <p>Track shared spending, validate splits before submission, and record payments between members.</p>
-          <div className="hero-actions">
-            <Link className="button button-secondary" href="/split/groups">Back to groups</Link>
-            <span className="button button-primary">{message}</span>
-          </div>
-        </article>
-
-        <aside className="hero-side">
-          <div className="hero-card side-card">
-            <h2>Members</h2>
-            <p>{group ? `${group.members.length} people in this group.` : "Loading members..."}</p>
-          </div>
-          <div className="hero-card side-card">
-            <h2>Expenses</h2>
-            <p>{expenses.length} shared expenses recorded.</p>
-          </div>
-        </aside>
+          <p>{group ? `${group.members.length} members, ${expenses.length} expenses` : "Loading group"}</p>
+          {group ? renderAvatarStack(group.members) : null}
+        </div>
+        <div className="page-header-actions">
+          <Link className="button button-secondary" href="/split/groups">Back to groups</Link>
+          <button className="button button-primary" type="button" onClick={() => setIsExpenseWizardOpen(true)}>
+            Add expense
+          </button>
+          <span className="button button-primary">{message}</span>
+        </div>
       </section>
 
-      <section className="panel grid">
+      <div className="split-card">
         <div>
           <h2 className="section-title">Balances</h2>
           <p className="section-copy">Positive means the group owes this person. Negative means this person owes.</p>
         </div>
-        <div className="analysis-card-grid">
-          {balances.balances.map((balance) => (
-            <article
-              className={`mini-analysis-card ${
-                balance.net_balance < 0 ? "budget-danger" : balance.net_balance > 0 ? "budget-healthy" : ""
-              }`}
-              key={balance.user_id}
-            >
-              <div className="item-title">{balance.full_name}</div>
-              <div className={balance.net_balance < 0 ? "amount-expense" : "amount-income"}>
-                {formatCurrency(balance.net_balance, "INR")}
+        <div>
+          {balances.balances.map((balance, index) => (
+            <div className="balance-row" key={balance.user_id}>
+              <div className="balance-row-name">
+                {renderBalanceAvatar(balance.full_name, index)}
+                <span>{balance.full_name}</span>
               </div>
-              <div className="stat-footnote">
-                {balance.net_balance > 0
-                  ? "Group owes them"
-                  : balance.net_balance < 0
-                    ? "They owe the group"
-                    : "Settled"}
-              </div>
-            </article>
+              <span className={balance.net_balance >= 0 ? "balance-positive" : "balance-negative"}>
+                {balance.net_balance >= 0
+                  ? `You'll get ${formatRs(balance.net_balance)}`
+                  : `You'll pay ${formatRs(balance.net_balance)}`}
+              </span>
+            </div>
           ))}
         </div>
-      </section>
+      </div>
 
       <section className="grid content-grid">
         <article className="panel">
-          <h2 className="section-title">Add expense</h2>
-          <p className="section-copy">Use equal split for quick entries, or validate custom values before saving.</p>
-          <form className="expense-form" onSubmit={handleExpenseSubmit}>
-            <div className="field-row">
-              <label className="field">
-                <span className="field-label">Amount</span>
-                <input
-                  className="field-input"
-                  type="number"
-                  min="0.01"
-                  step="0.01"
-                  value={expenseForm.amount}
-                  onChange={(event) => setExpenseForm((current) => ({ ...current, amount: event.target.value }))}
-                  required
-                />
-              </label>
-              <label className="field">
-                <span className="field-label">Date</span>
-                <input
-                  className="field-input"
-                  type="date"
-                  value={expenseForm.expense_date}
-                  onChange={(event) => setExpenseForm((current) => ({ ...current, expense_date: event.target.value }))}
-                  required
-                />
-              </label>
-            </div>
-
-            <label className="field">
-              <span className="field-label">Description</span>
-              <input
-                className="field-input"
-                value={expenseForm.description}
-                onChange={(event) => setExpenseForm((current) => ({ ...current, description: event.target.value }))}
-                placeholder="Dinner, cab, groceries"
-                required
-              />
-            </label>
-
-            <label className="field">
-              <span className="field-label">Paid by</span>
-              <select
-                className="field-input"
-                value={expenseForm.paid_by}
-                onChange={(event) => setExpenseForm((current) => ({ ...current, paid_by: event.target.value }))}
-                required
-              >
-                {group?.members.map((member) => (
-                  <option key={member.user_id} value={member.user_id}>
-                    {member.full_name}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <div className="segmented-control" role="group" aria-label="Split type">
-              {(["equal", "percentage", "custom"] as const).map((splitType) => (
-                <button
-                  className={expenseForm.split_type === splitType ? "segment-active" : ""}
-                  type="button"
-                  key={splitType}
-                  onClick={() => setExpenseForm((current) => ({ ...current, split_type: splitType }))}
-                >
-                  {splitType}
-                </button>
-              ))}
-            </div>
-
-            {expenseForm.split_type !== "equal" && group ? (
-              <div className="field-row">
-                {group.members.map((member) => (
-                  <label className="field" key={member.user_id}>
-                    <span className="field-label">
-                      {member.full_name} {expenseForm.split_type === "percentage" ? "(%)" : "(INR)"}
-                    </span>
-                    <input
-                      className="field-input"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={expenseForm.splits[member.user_id] ?? ""}
-                      onChange={(event) =>
-                        setExpenseForm((current) => ({
-                          ...current,
-                          splits: { ...current.splits, [member.user_id]: event.target.value },
-                        }))
-                      }
-                      required
-                    />
-                  </label>
-                ))}
-              </div>
-            ) : null}
-
-            <div className="form-actions">
-              <button className="button button-primary" type="submit" disabled={isExpenseSubmitting}>
-                {isExpenseSubmitting ? "Saving..." : "Add expense"}
-              </button>
-              <span className="form-message">{splitValidationMessage || message}</span>
-            </div>
-          </form>
-        </article>
-
-        <aside className="panel">
           <h2 className="section-title">Expense list</h2>
           <p className="section-copy">Every saved shared expense with resolved member splits.</p>
           <div className="list">
@@ -348,7 +214,7 @@ export function SplitGroupDetailWorkspace({ groupId }: { groupId: string }) {
               <div className="empty-state">No group expenses yet.</div>
             )}
           </div>
-        </aside>
+        </article>
       </section>
 
       <section className="grid content-grid">
@@ -429,6 +295,16 @@ export function SplitGroupDetailWorkspace({ groupId }: { groupId: string }) {
           </div>
         </aside>
       </section>
+
+      {isExpenseWizardOpen ? (
+        <SplitExpenseWizard
+          initialGroupId={groupId}
+          onClose={() => setIsExpenseWizardOpen(false)}
+          onCreated={() => {
+            void loadGroup("Group expense saved.");
+          }}
+        />
+      ) : null}
     </main>
   );
 }

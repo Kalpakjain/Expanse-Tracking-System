@@ -73,15 +73,14 @@ export function SplitActivityWorkspace() {
 
   return (
     <main className="page-shell">
-      <section className="hero">
-        <article className="hero-card">
-          <span className="eyebrow">Activity</span>
-          <h1>Split timeline.</h1>
-          <p>Track shared expenses and settlements across every group, newest first.</p>
-          <div className="hero-actions">
-            <span className="button button-secondary">{message}</span>
-          </div>
-        </article>
+      <section className="page-header-compact">
+        <div>
+          <h1>Activity</h1>
+          <p>Expenses and settlements</p>
+        </div>
+        <div className="page-header-actions">
+          <span className="button button-secondary">{message}</span>
+        </div>
       </section>
 
       <section className="panel">

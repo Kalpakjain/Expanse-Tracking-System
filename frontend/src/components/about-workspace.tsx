@@ -1,26 +1,11 @@
 export function AboutWorkspace() {
   return (
     <main className="page-shell">
-      <section className="hero">
-        <article className="hero-card">
-          <span className="eyebrow">About Us</span>
-          <h1>Built as an INR-first finance system, not just a form to log expenses.</h1>
-          <p>
-            Smart Expense Tracker is being shaped as a full-stack money platform for Indian users:
-            capture clearly, control budgets in rupees, automate alerts, and keep the system ready
-            for smarter insights only after the financial core is trustworthy.
-          </p>
-        </article>
-
-        <aside className="hero-side">
-          <div className="hero-card side-card">
-            <h2>Product direction</h2>
-            <p>
-              Start with excellent manual tracking, then layer reporting, budgets, alerts, OCR, and
-              AI on top of stable financial records.
-            </p>
-          </div>
-        </aside>
+      <section className="page-header-compact">
+        <div>
+          <h1>About</h1>
+          <p>Product stack and roadmap</p>
+        </div>
       </section>
 
       <section className="grid stats-grid">
@@ -42,7 +27,7 @@ export function AboutWorkspace() {
         <article className="panel stat-card">
           <div className="stat-label">Automation path</div>
           <div className="stat-value">Alerts + AI</div>
-          <div className="stat-footnote">Notifications, receipts, OCR, and intelligent insights</div>
+          <div className="stat-footnote">Receipts, OCR, and intelligent insights</div>
         </article>
       </section>
 
@@ -73,7 +58,7 @@ export function AboutWorkspace() {
               <div>
                 <div className="item-title">Automation layer</div>
                 <div className="item-subtitle">
-                  WhatsApp preferences, recurring reminders, scheduled digests, and budget alerts.
+                  Receipt workflows, recurring spend detection, and budget alert rules.
                 </div>
               </div>
             </div>

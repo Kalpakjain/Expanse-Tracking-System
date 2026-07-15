@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 
-import { createTransaction, updateTransaction } from "@/lib/api";
-import type { Category, CreateTransactionInput, PaymentAccount, Transaction } from "@/lib/types";
+import { createCategory, createTransaction, updateTransaction } from "@/lib/api";
+import type { Category, CreateCategoryInput, CreateTransactionInput, PaymentAccount, Transaction } from "@/lib/types";
 
 type ExpenseFormProps = {
   categories: Category[];
@@ -41,6 +41,8 @@ const initialState: ExpenseFormState = {
   notes: "",
 };
 
+const newCategoryValue = "**new**";
+
 function isUuid(value: string) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 }
@@ -76,14 +78,24 @@ export function ExpenseForm({
   transaction,
 }: ExpenseFormProps) {
   const [form, setForm] = useState<ExpenseFormState>(() => buildInitialState(transaction, initialType));
+  const [localCategories, setLocalCategories] = useState<Category[]>(categories);
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [isCreatingCategory, setIsCreatingCategory] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState(
     transaction ? "Update the transaction details and save." : "Add a new ledger entry.",
   );
-  const availableCategories = categories.filter((category) => category.type === form.type);
+  const availableCategories = localCategories.filter((category) => category.type === form.type);
   const isEditing = Boolean(transaction);
 
   useEffect(() => {
+    setLocalCategories(categories);
+  }, [categories]);
+
+  useEffect(() => {
+    if (form.category_id === newCategoryValue) {
+      return;
+    }
     const categoryStillMatches = availableCategories.some((category) => category.id === form.category_id);
     if ((!form.category_id || !categoryStillMatches) && availableCategories.length > 0) {
       setForm((current) => ({
@@ -106,6 +118,10 @@ export function ExpenseForm({
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (form.category_id === newCategoryValue) {
+      setMessage("Create the new category first.");
+      return;
+    }
     if (!form.category_id) {
       setMessage("Please select a category first.");
       return;
@@ -149,6 +165,34 @@ export function ExpenseForm({
       setMessage(error instanceof Error ? error.message : "Could not save the transaction yet.");
     } finally {
       setIsSubmitting(false);
+    }
+  }
+
+  async function handleCreateCategory() {
+    const name = newCategoryName.trim();
+    if (!name) {
+      setMessage("Enter a category name first.");
+      return;
+    }
+
+    setIsCreatingCategory(true);
+    setMessage("Creating category...");
+    try {
+      const payload: CreateCategoryInput = {
+        name,
+        type: form.type,
+        color: form.type === "expense" ? "#B0305C" : "#0F766E",
+        icon: form.type === "expense" ? "receipt" : "wallet",
+      };
+      const category = await createCategory(payload);
+      setLocalCategories((current) => [...current, category]);
+      setForm((current) => ({ ...current, category_id: category.id }));
+      setNewCategoryName("");
+      setMessage("Category created and selected.");
+    } catch {
+      setMessage("Could not create category. It may already exist.");
+    } finally {
+      setIsCreatingCategory(false);
     }
   }
 
@@ -266,9 +310,12 @@ export function ExpenseForm({
               className="field-input"
               name="category_id"
               value={form.category_id}
-              onChange={(event) =>
-                setForm((current) => ({ ...current, category_id: event.target.value }))
-              }
+              onChange={(event) => {
+                setForm((current) => ({ ...current, category_id: event.target.value }));
+                if (event.target.value !== newCategoryValue) {
+                  setNewCategoryName("");
+                }
+              }}
               required
             >
               {availableCategories.map((category) => (
@@ -276,6 +323,7 @@ export function ExpenseForm({
                   {category.name}
                 </option>
               ))}
+              <option value={newCategoryValue}>+ Add new category</option>
             </select>
           </label>
 
@@ -293,6 +341,30 @@ export function ExpenseForm({
             />
           </label>
         </div>
+
+        {form.category_id === newCategoryValue ? (
+          <div className="inline-create-row">
+            <label className="field">
+              <span className="field-label">New {form.type} category</span>
+              <input
+                className="field-input"
+                value={newCategoryName}
+                onChange={(event) => setNewCategoryName(event.target.value)}
+                placeholder={form.type === "expense" ? "Dining, Rent, Fitness" : "Salary, Freelance"}
+              />
+            </label>
+            <button
+              className="button button-primary compact-button"
+              type="button"
+              disabled={isCreatingCategory}
+              onClick={() => {
+                void handleCreateCategory();
+              }}
+            >
+              {isCreatingCategory ? "Creating..." : "Create"}
+            </button>
+          </div>
+        ) : null}
 
         <label className="field hidden-field">
           <span className="field-label">Account name</span>

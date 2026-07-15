@@ -19,9 +19,6 @@ import type {
   GroupBalanceEntry,
   GroupBalanceRead,
   GroupExpense,
-  NotificationPreferences,
-  NotificationPreferencesInput,
-  NotificationPreview,
   PaymentAccount,
   Receipt,
   ReportsOverview,
@@ -357,33 +354,6 @@ export function listSettlements(groupId: string) {
 
 export function createSettlement(groupId: string, payload: CreateSettlementInput) {
   return postJson<Settlement, CreateSettlementInput>(`/api/v1/groups/${groupId}/settlements`, payload);
-}
-
-export function getNotificationPreferences() {
-  return fetchJson<NotificationPreferences>("/api/v1/settings/notifications");
-}
-
-export function getNotificationPreview() {
-  return fetchJson<NotificationPreview>("/api/v1/settings/notifications/preview");
-}
-
-export async function updateNotificationPreferences(
-  payload: NotificationPreferencesInput,
-) {
-  const response = await fetch(`${API_BASE_URL}/api/v1/settings/notifications`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      ...authHeaders(),
-    },
-    body: JSON.stringify(payload),
-  });
-
-  if (!response.ok) {
-    throw new Error(`Request failed with status ${response.status}`);
-  }
-
-  return response.json() as Promise<NotificationPreferences>;
 }
 
 export function getReceipts() {

@@ -981,6 +981,17 @@ a {
   background: linear-gradient(180deg, var(--primary), var(--accent));
 }
 
+.chart-panel-actions { display: flex; gap: 8px; align-items: center; }
+.comparison-legend { display: flex; gap: 16px; align-items: center; font-size: 12px; color: var(--muted); margin-bottom: 12px; }
+.legend-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; }
+.legend-dot-current { background: var(--primary); }
+.legend-dot-previous { background: var(--line); }
+.comparison-bar-group { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.comparison-bar-pair { display: flex; gap: 4px; align-items: flex-end; height: 140px; }
+.comparison-bar-pair .bar-track { width: 14px; }
+.bar-fill-current { background: var(--primary); border-radius: 4px 4px 0 0; }
+.bar-fill-previous { background: var(--line); border-radius: 4px 4px 0 0; }
+
 .bar-label,
 .bar-value {
   color: #45464d;

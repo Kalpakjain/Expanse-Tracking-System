@@ -53,40 +53,106 @@ function buildCategorySpendBreakdown(transactions: Transaction[]) {
     .sort((left, right) => right.amount - left.amount);
 }
 
-function getMonthLabel(monthKey: string) {
-  const [year, month] = monthKey.split("-").map(Number);
-  return new Intl.DateTimeFormat("en-IN", { month: "short", year: "2-digit" }).format(
-    new Date(year, month - 1, 1),
-  );
-}
+type Granularity = "weekly" | "monthly" | "quarterly" | "yearly";
 
-function buildMonthlyAnalysis(transactions: Transaction[]) {
-  const monthlyTotals = new Map<string, { income: number; expense: number }>();
+type ComparisonBucket = {
+  label: string;
+  current: number;
+  previous: number;
+};
 
-  for (const transaction of transactions) {
-    const monthKey = transaction.transaction_date.slice(0, 7);
-    const current = monthlyTotals.get(monthKey) ?? { income: 0, expense: 0 };
-    if (transaction.type === "income") {
-      current.income += transaction.amount;
+function buildComparisonAnalysis(transactions: Transaction[], granularity: Granularity): ComparisonBucket[] {
+  const today = new Date();
+  const bucketCount = granularity === "weekly" ? 7 : granularity === "monthly" ? 6 : 4;
+
+  function bucketStart(periodsBack: number, index: number): Date {
+    const d = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    if (granularity === "weekly") {
+      const dayOfWeek = d.getDay();
+      d.setDate(d.getDate() - dayOfWeek - periodsBack * 7 + index);
+      d.setHours(0, 0, 0, 0);
+    } else if (granularity === "monthly") {
+      d.setDate(1);
+      d.setMonth(d.getMonth() - periodsBack * bucketCount + index);
+    } else if (granularity === "quarterly") {
+      const currentQuarterStartMonth = Math.floor(d.getMonth() / 3) * 3;
+      d.setDate(1);
+      d.setMonth(currentQuarterStartMonth - periodsBack * bucketCount * 3 + index * 3);
     } else {
-      current.expense += transaction.amount;
+      d.setMonth(0, 1);
+      d.setFullYear(d.getFullYear() - periodsBack * bucketCount + index);
     }
-    monthlyTotals.set(monthKey, current);
+    return d;
   }
 
-  const today = new Date();
-  return Array.from({ length: 6 }, (_, index) => {
-    const monthDate = new Date(today.getFullYear(), today.getMonth() - (5 - index), 1);
-    const monthKey = `${monthDate.getFullYear()}-${String(monthDate.getMonth() + 1).padStart(2, "0")}`;
-    const totals = monthlyTotals.get(monthKey) ?? { income: 0, expense: 0 };
+  function bucketEnd(start: Date): Date {
+    const end = new Date(start);
+    if (granularity === "weekly") end.setDate(end.getDate() + 1);
+    else if (granularity === "monthly") end.setMonth(end.getMonth() + 1);
+    else if (granularity === "quarterly") end.setMonth(end.getMonth() + 3);
+    else end.setFullYear(end.getFullYear() + 1);
+    return end;
+  }
+
+  function bucketLabel(d: Date): string {
+    if (granularity === "weekly") {
+      return d.toLocaleDateString(undefined, { weekday: "short" }) + " " + d.getDate();
+    }
+    if (granularity === "monthly") {
+      return d.toLocaleDateString(undefined, { month: "short" });
+    }
+    if (granularity === "quarterly") {
+      return `Q${Math.floor(d.getMonth() / 3) + 1} '${String(d.getFullYear()).slice(2)}`;
+    }
+    return String(d.getFullYear());
+  }
+
+  function sumExpensesInRange(start: Date, end: Date): number {
+    return transactions
+      .filter((t) => t.type === "expense")
+      .filter((t) => {
+        const txDate = new Date(t.transaction_date);
+        return txDate >= start && txDate < end;
+      })
+      .reduce((sum, t) => sum + t.amount, 0);
+  }
+
+  return Array.from({ length: bucketCount }, (_, index) => {
+    const currentStart = bucketStart(0, index);
+    const previousStart = bucketStart(1, index);
     return {
-      monthKey,
-      label: getMonthLabel(monthKey),
-      income: totals.income,
-      expense: totals.expense,
-      balance: totals.income - totals.expense,
+      label: bucketLabel(currentStart),
+      current: sumExpensesInRange(currentStart, bucketEnd(currentStart)),
+      previous: sumExpensesInRange(previousStart, bucketEnd(previousStart)),
     };
   });
+}
+
+function formatCompactCurrency(amount: number): string {
+  if (amount >= 100000) return `Rs ${(amount / 100000).toFixed(1)}L`;
+  if (amount >= 1000) return `Rs ${(amount / 1000).toFixed(1)}k`;
+  return `Rs ${Math.round(amount)}`;
+}
+
+function granularityLabel(granularity: Granularity): string {
+  if (granularity === "weekly") return "week";
+  if (granularity === "monthly") return "month";
+  if (granularity === "quarterly") return "quarter";
+  return "year";
+}
+
+function exportTransactionsToCsv(transactions: Transaction[]) {
+  const header = "Date,Type,Category,Description,Amount\n";
+  const rows = transactions
+    .map((t) => `${t.transaction_date},${t.type},${t.category_name},"${(t.description ?? "").replace(/"/g, '""')}",${t.amount}`)
+    .join("\n");
+  const blob = new Blob([header + rows], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `transactions-${new Date().toISOString().slice(0, 10)}.csv`;
+  link.click();
+  URL.revokeObjectURL(url);
 }
 
 export function ReportsWorkspace() {
@@ -111,6 +177,7 @@ export function ReportsWorkspace() {
   const [editingBudget, setEditingBudget] = useState<Budget | null>(null);
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [granularity, setGranularity] = useState<Granularity>("monthly");
 
   const fallbackBreakdown = buildCategorySpendBreakdown(transactions).map((entry) => {
     const matchingCategory = categories.find((category) => category.name === entry.name);
@@ -141,8 +208,19 @@ export function ReportsWorkspace() {
   }, [loadReports]);
 
   const breakdown = overview.category_breakdown.length ? overview.category_breakdown : fallbackBreakdown;
-  const monthlyAnalysis = useMemo(() => buildMonthlyAnalysis(transactions), [transactions]);
-  const maxMonthlyExpense = Math.max(...monthlyAnalysis.map((month) => month.expense), 1);
+  const comparisonData = useMemo(
+    () => buildComparisonAnalysis(transactions, granularity),
+    [transactions, granularity],
+  );
+  const maxComparisonValue = Math.max(
+    ...comparisonData.flatMap((bucket) => [bucket.current, bucket.previous]),
+    1,
+  );
+  const totalCurrent = comparisonData.reduce((sum, bucket) => sum + bucket.current, 0);
+  const totalPrevious = comparisonData.reduce((sum, bucket) => sum + bucket.previous, 0);
+  const percentChange = totalPrevious > 0
+    ? Math.round(((totalCurrent - totalPrevious) / totalPrevious) * 100)
+    : null;
   const filteredBudgets = overview.budgets.filter(
     (budget) => budget.month === selectedMonth && budget.year === selectedYear,
   );
@@ -202,21 +280,62 @@ export function ReportsWorkspace() {
       <section className="panel chart-panel">
         <div className="panel-header">
           <div>
-            <h2 className="section-title">Month-wise expenses</h2>
-            <p className="section-copy">Last six months of recorded spending.</p>
+            <h2 className="section-title">Spending comparison</h2>
+            <p className="section-copy">
+              {percentChange === null
+                ? `Comparing this ${granularityLabel(granularity)} to last.`
+                : percentChange >= 0
+                  ? `You spent ${percentChange}% more this ${granularityLabel(granularity)} than last.`
+                  : `You spent ${Math.abs(percentChange)}% less this ${granularityLabel(granularity)} than last.`}
+            </p>
+          </div>
+          <div className="chart-panel-actions">
+            <select
+              className="field-input compact-select"
+              value={granularity}
+              onChange={(event) => setGranularity(event.target.value as Granularity)}
+              aria-label="Select comparison granularity"
+            >
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+              <option value="quarterly">Quarterly</option>
+              <option value="yearly">Yearly</option>
+            </select>
+            <button
+              type="button"
+              className="button button-secondary"
+              onClick={() => exportTransactionsToCsv(transactions)}
+            >
+              Export CSV
+            </button>
           </div>
         </div>
-        <div className="bar-chart" aria-label="Month-wise expense chart">
-          {monthlyAnalysis.map((month) => (
-            <div className="bar-column" key={month.monthKey}>
-              <div className="bar-track">
-                <span
-                  className="bar-fill"
-                  style={{ height: `${Math.max((month.expense / maxMonthlyExpense) * 100, 6)}%` }}
-                />
+
+        <div className="comparison-legend">
+          <span className="legend-dot legend-dot-current" /> This {granularityLabel(granularity)}
+          <span className="legend-dot legend-dot-previous" /> Last {granularityLabel(granularity)}
+        </div>
+
+        <div className="bar-chart comparison-bar-chart" aria-label="Spending comparison chart">
+          {comparisonData.map((bucket) => (
+            <div className="bar-column comparison-bar-group" key={bucket.label}>
+              <div className="comparison-bar-pair">
+                <div className="bar-track">
+                  <span
+                    className="bar-fill bar-fill-previous"
+                    style={{ height: `${Math.max((bucket.previous / maxComparisonValue) * 100, 2)}%` }}
+                    title={`${formatCurrency(bucket.previous, "INR")} (${formatCompactCurrency(bucket.previous)})`}
+                  />
+                </div>
+                <div className="bar-track">
+                  <span
+                    className="bar-fill bar-fill-current"
+                    style={{ height: `${Math.max((bucket.current / maxComparisonValue) * 100, 2)}%` }}
+                    title={`${formatCurrency(bucket.current, "INR")} (${formatCompactCurrency(bucket.current)})`}
+                  />
+                </div>
               </div>
-              <div className="bar-label">{month.label}</div>
-              <div className="bar-value">{formatCurrency(month.expense, "INR")}</div>
+              <div className="bar-label">{bucket.label}</div>
             </div>
           ))}
         </div>

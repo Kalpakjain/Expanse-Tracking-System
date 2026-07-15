@@ -127,6 +127,11 @@ export type ResetPasswordInput = {
   password: string;
 };
 
+export type ChangePasswordInput = {
+  current_password: string;
+  new_password: string;
+};
+
 export type Budget = {
   id: string;
   category_id: string;
@@ -154,6 +159,91 @@ export type CreateBudgetInput = {
 };
 
 export type UpdateBudgetInput = CreateBudgetInput;
+
+export type GroupMember = {
+  user_id: string;
+  full_name: string;
+  email: string;
+  is_placeholder: boolean;
+};
+
+export type Group = {
+  id: string;
+  name: string;
+  created_by: string;
+  members: GroupMember[];
+  created_at: string;
+};
+
+export type CreateGroupInput = {
+  name: string;
+  member_names: string[];
+};
+
+export type GroupExpenseSplitInput = {
+  user_id: string;
+  value: number;
+};
+
+export type GroupExpenseSplit = {
+  user_id: string;
+  full_name: string;
+  amount_owed: number;
+  is_settled: boolean;
+};
+
+export type GroupExpense = {
+  id: string;
+  group_id: string;
+  paid_by: string;
+  paid_by_name: string;
+  amount: number;
+  description: string;
+  expense_date: string;
+  split_type: string;
+  splits: GroupExpenseSplit[];
+  created_at: string;
+};
+
+export type CreateGroupExpenseInput = {
+  group_id?: string;
+  amount: number;
+  description: string;
+  category_id: string | null;
+  expense_date: string;
+  split_type: "equal" | "percentage" | "custom";
+  splits: GroupExpenseSplitInput[] | null;
+};
+
+export type Settlement = {
+  id: string;
+  group_id: string;
+  from_user_id: string;
+  from_user_name: string;
+  to_user_id: string;
+  to_user_name: string;
+  amount: number;
+  note: string;
+  settled_at: string;
+};
+
+export type CreateSettlementInput = {
+  group_id?: string;
+  to_user_id: string;
+  amount: number;
+  note: string;
+};
+
+export type GroupBalanceEntry = {
+  user_id: string;
+  full_name: string;
+  net_balance: number;
+};
+
+export type GroupBalanceRead = {
+  group_id: string;
+  balances: GroupBalanceEntry[];
+};
 
 export type CategoryReportItem = {
   category_id: string;

@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import date, datetime
 from uuid import uuid4
 
-from sqlalchemy import Boolean, Date, DateTime, Float, ForeignKey, Integer, String, Text, func
+from sqlalchemy import Boolean, Date, DateTime, Float, ForeignKey, Integer, String, Text, UniqueConstraint, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -47,6 +47,18 @@ class User(Base, TimestampMixin):
     receipts: Mapped[list["Receipt"]] = relationship(back_populates="user")
     budgets: Mapped[list["Budget"]] = relationship(back_populates="user")
     notification_preferences: Mapped[list["NotificationPreference"]] = relationship(back_populates="user")
+    groups_created: Mapped[list["Group"]] = relationship(back_populates="creator")
+    group_memberships: Mapped[list["GroupMember"]] = relationship(back_populates="user")
+    group_expenses_paid: Mapped[list["GroupExpense"]] = relationship(back_populates="payer")
+    group_expense_splits: Mapped[list["GroupExpenseSplit"]] = relationship(back_populates="user")
+    settlements_made: Mapped[list["Settlement"]] = relationship(
+        back_populates="from_user",
+        foreign_keys="Settlement.from_user_id",
+    )
+    settlements_received: Mapped[list["Settlement"]] = relationship(
+        back_populates="to_user",
+        foreign_keys="Settlement.to_user_id",
+    )
 
 
 class Category(Base, TimestampMixin):
@@ -159,3 +171,82 @@ class NotificationPreference(Base, TimestampMixin):
     currency_code: Mapped[str] = mapped_column(String(3), nullable=False, default="INR")
 
     user: Mapped[User] = relationship(back_populates="notification_preferences")
+
+
+class Group(Base, TimestampMixin):
+    __tablename__ = "groups"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    created_by: Mapped[str] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
+
+    creator: Mapped[User] = relationship(back_populates="groups_created")
+    members: Mapped[list["GroupMember"]] = relationship(back_populates="group")
+    expenses: Mapped[list["GroupExpense"]] = relationship(back_populates="group")
+    settlements: Mapped[list["Settlement"]] = relationship(back_populates="group")
+
+
+class GroupMember(Base):
+    __tablename__ = "group_members"
+    __table_args__ = (UniqueConstraint("group_id", "user_id", name="uq_group_members_group_id_user_id"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    group_id: Mapped[str] = mapped_column(ForeignKey("groups.id"), nullable=False, index=True)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
+    joined_at: Mapped[datetime] = mapped_column(DateTime(timezone=False), nullable=False, server_default=func.now())
+
+    group: Mapped[Group] = relationship(back_populates="members")
+    user: Mapped[User] = relationship(back_populates="group_memberships")
+
+
+class GroupExpense(Base, TimestampMixin):
+    __tablename__ = "group_expenses"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    group_id: Mapped[str] = mapped_column(ForeignKey("groups.id"), nullable=False, index=True)
+    paid_by: Mapped[str] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
+    amount: Mapped[float] = mapped_column(Float, nullable=False)
+    description: Mapped[str] = mapped_column(String(160), nullable=False)
+    category_id: Mapped[str | None] = mapped_column(ForeignKey("categories.id"), nullable=True, index=True)
+    expense_date: Mapped[date] = mapped_column(Date, nullable=False)
+    split_type: Mapped[str] = mapped_column(String(20), nullable=False)
+
+    group: Mapped[Group] = relationship(back_populates="expenses")
+    payer: Mapped[User] = relationship(back_populates="group_expenses_paid")
+    category: Mapped[Category | None] = relationship()
+    splits: Mapped[list["GroupExpenseSplit"]] = relationship(back_populates="group_expense")
+
+
+class GroupExpenseSplit(Base):
+    __tablename__ = "group_expense_splits"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    group_expense_id: Mapped[str] = mapped_column(ForeignKey("group_expenses.id"), nullable=False, index=True)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
+    amount_owed: Mapped[float] = mapped_column(Float, nullable=False)
+    is_settled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+
+    group_expense: Mapped[GroupExpense] = relationship(back_populates="splits")
+    user: Mapped[User] = relationship(back_populates="group_expense_splits")
+
+
+class Settlement(Base):
+    __tablename__ = "settlements"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    group_id: Mapped[str] = mapped_column(ForeignKey("groups.id"), nullable=False, index=True)
+    from_user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
+    to_user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
+    amount: Mapped[float] = mapped_column(Float, nullable=False)
+    note: Mapped[str] = mapped_column(String(160), nullable=False, default="")
+    settled_at: Mapped[datetime] = mapped_column(DateTime(timezone=False), nullable=False, server_default=func.now())
+
+    group: Mapped[Group] = relationship(back_populates="settlements")
+    from_user: Mapped[User] = relationship(
+        back_populates="settlements_made",
+        foreign_keys=[from_user_id],
+    )
+    to_user: Mapped[User] = relationship(
+        back_populates="settlements_received",
+        foreign_keys=[to_user_id],
+    )

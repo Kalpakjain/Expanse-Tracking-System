@@ -58,3 +58,8 @@ class ResetPasswordRequest(BaseModel):
     email: str = EmailField
     code: str = Field(min_length=6, max_length=6)
     password: str = Field(min_length=8, max_length=128)
+
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str = Field(min_length=8, max_length=128)
+    new_password: str = Field(min_length=8, max_length=128)

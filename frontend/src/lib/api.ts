@@ -5,12 +5,20 @@ import type {
   AuthSession,
   Budget,
   Category,
+  ChangePasswordInput,
   CreateBudgetInput,
   CreateCategoryInput,
+  CreateGroupExpenseInput,
+  CreateGroupInput,
   CreatePaymentAccountInput,
   CreateReceiptTransactionInput,
+  CreateSettlementInput,
   CreateTransactionInput,
   DashboardSummary,
+  Group,
+  GroupBalanceEntry,
+  GroupBalanceRead,
+  GroupExpense,
   NotificationPreferences,
   NotificationPreferencesInput,
   NotificationPreview,
@@ -18,6 +26,7 @@ import type {
   Receipt,
   ReportsOverview,
   ResetPasswordInput,
+  Settlement,
   Transaction,
   UpdateTransactionInput,
   VerifyEmailInput,
@@ -136,6 +145,21 @@ export function forgotPassword(email: string) {
 
 export function resetPassword(payload: ResetPasswordInput) {
   return postJson<AuthSession, ResetPasswordInput>("/api/v1/auth/reset-password", payload);
+}
+
+export async function changePassword(payload: ChangePasswordInput) {
+  const response = await fetch(`${API_BASE_URL}/api/v1/auth/change-password`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...authHeaders(),
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    throw new Error(await responseErrorMessage(response));
+  }
 }
 
 export function getCurrentUser() {
@@ -293,6 +317,46 @@ export async function deleteBudget(budgetId: string) {
 
 export function getReportsOverview() {
   return fetchJson<ReportsOverview>("/api/v1/reports/overview");
+}
+
+export function listGroups() {
+  return fetchJson<Group[]>("/api/v1/groups");
+}
+
+export function createGroup(payload: CreateGroupInput) {
+  return postJson<Group, CreateGroupInput>("/api/v1/groups", payload);
+}
+
+export function getGroup(groupId: string) {
+  return fetchJson<Group>(`/api/v1/groups/${groupId}`);
+}
+
+export function addGroupMember(groupId: string, name: string) {
+  return postJson<Group, { name: string }>(`/api/v1/groups/${groupId}/members`, { name });
+}
+
+export function listGroupExpenses(groupId: string) {
+  return fetchJson<GroupExpense[]>(`/api/v1/groups/${groupId}/expenses`);
+}
+
+export function createGroupExpense(groupId: string, payload: CreateGroupExpenseInput) {
+  return postJson<GroupExpense, CreateGroupExpenseInput>(`/api/v1/groups/${groupId}/expenses`, payload);
+}
+
+export function getGroupBalances(groupId: string) {
+  return fetchJson<GroupBalanceRead>(`/api/v1/groups/${groupId}/balances`);
+}
+
+export function getFriendBalances() {
+  return fetchJson<GroupBalanceEntry[]>("/api/v1/groups/friends/balances");
+}
+
+export function listSettlements(groupId: string) {
+  return fetchJson<Settlement[]>(`/api/v1/groups/${groupId}/settlements`);
+}
+
+export function createSettlement(groupId: string, payload: CreateSettlementInput) {
+  return postJson<Settlement, CreateSettlementInput>(`/api/v1/groups/${groupId}/settlements`, payload);
 }
 
 export function getNotificationPreferences() {

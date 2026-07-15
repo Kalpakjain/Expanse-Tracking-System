@@ -8,6 +8,7 @@ from app.schemas.auth import (
     AuthRegister,
     AuthRegisterResponse,
     AuthSession,
+    ChangePasswordRequest,
     ForgotPasswordRequest,
     ResendVerificationRequest,
     ResetPasswordRequest,
@@ -16,6 +17,7 @@ from app.schemas.auth import (
 )
 from app.services.auth import (
     authenticate_user,
+    change_user_password,
     register_user,
     resend_verification_code,
     reset_user_password,
@@ -108,6 +110,18 @@ def login(payload: AuthLogin, db: Session = Depends(get_db)) -> AuthSession:
 @router.get("/me", response_model=UserRead)
 def me(current_user: User = Depends(get_current_user)) -> UserRead:
     return UserRead.model_validate(current_user)
+
+
+@router.post("/change-password", status_code=status.HTTP_204_NO_CONTENT)
+def change_password(
+    payload: ChangePasswordRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> None:
+    try:
+        change_user_password(db, current_user, payload)
+    except ValueError as exc:
+        raise _auth_http_exception(exc) from exc
 
 
 def _auth_http_exception(exc: ValueError) -> HTTPException:

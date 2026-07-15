@@ -8,10 +8,12 @@ const links = [
   { href: "/", label: "Dashboard", icon: "dashboard" },
   { href: "/categories", label: "Categories", icon: "category" },
   { href: "/reports", label: "Analytics", icon: "insights" },
+  { href: "/split", label: "Split", icon: "call_split" },
   { href: "/receipts", label: "Receipts", icon: "receipt_long" },
   { href: "/bank-connections", label: "Bank Connections", icon: "link" },
   { href: "/savings-transfer", label: "Savings Transfer", icon: "savings" },
   { href: "/whatsapp-notifications", label: "Notifications", icon: "notifications" },
+  { href: "/settings", label: "Settings", icon: "settings" },
 ];
 
 export function SiteHeader() {

@@ -12,6 +12,7 @@ from app.schemas.auth import (
     AuthRegister,
     AuthRegisterResponse,
     AuthSession,
+    ChangePasswordRequest,
     ResetPasswordRequest,
     UserRead,
     VerifyEmailRequest,
@@ -167,6 +168,17 @@ def reset_user_password(db: Session, payload: ResetPasswordRequest) -> AuthSessi
     db.commit()
     db.refresh(user)
     return _to_auth_session(user)
+
+
+def change_user_password(db: Session, user: User, payload: ChangePasswordRequest) -> None:
+    if not verify_password(payload.current_password, user.password_hash):
+        raise ValueError("Current password is incorrect.")
+    if payload.new_password == payload.current_password:
+        raise ValueError("New password must be different from the current password.")
+
+    user.password_hash = hash_password(payload.new_password)
+    db.add(user)
+    db.commit()
 
 
 def verify_otp(db: Session, payload: VerifyEmailRequest) -> AuthSession:

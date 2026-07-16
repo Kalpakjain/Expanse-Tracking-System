@@ -233,6 +233,16 @@ export function ReportsWorkspace() {
   const percentChange = totalPrevious > 0
     ? Math.round(((totalCurrent - totalPrevious) / totalPrevious) * 100)
     : null;
+  const peakIndex = comparisonData.reduce(
+    (best, bucket, index) => (bucket.current > comparisonData[best].current ? index : best),
+    0,
+  );
+  const avgValue = comparisonData.reduce((sum, bucket) => sum + bucket.current, 0) / comparisonData.length;
+  const avgLinePercent = Math.min((avgValue / maxComparisonValue) * 100, 100);
+  const spendingBreakdown = [...breakdown].sort((left, right) => right.spent_amount - left.spent_amount);
+  const totalSpend = spendingBreakdown.reduce((sum, entry) => sum + entry.spent_amount, 0);
+  const topCategories = spendingBreakdown.slice(0, 2);
+  const othersAmount = spendingBreakdown.slice(2).reduce((sum, entry) => sum + entry.spent_amount, 0);
   const filteredBudgets = overview.budgets.filter(
     (budget) => budget.month === selectedMonth && budget.year === selectedYear,
   );
@@ -258,6 +268,14 @@ export function ReportsWorkspace() {
       setGranularity(nextGranularity);
       setIsTransitioning(false);
     }, 150);
+  }
+
+  function colorForCategory(name: string, fallbackIndex: number) {
+    const match = categories.find((category) => category.name === name);
+    if (match) {
+      return match.color;
+    }
+    return ["#b0305c", "#a8823c", "#dfd5c7"][fallbackIndex % 3];
   }
 
   return (
@@ -296,72 +314,141 @@ export function ReportsWorkspace() {
         </article>
       </section>
 
-      <section className="panel chart-panel">
-        <div className="panel-header">
-          <div>
-            <h2 className="section-title">Spending comparison</h2>
-            <p className="section-copy">
-              {percentChange === null
-                ? `Comparing this ${granularityLabel(granularity)} to last.`
-                : percentChange >= 0
-                  ? `You spent ${percentChange}% more this ${granularityLabel(granularity)} than last.`
-                  : `You spent ${Math.abs(percentChange)}% less this ${granularityLabel(granularity)} than last.`}
-            </p>
-          </div>
-          <div className="chart-panel-actions">
-            <select
-              className="field-input compact-select"
-              value={granularity}
-              onChange={handleGranularityChange}
-              aria-label="Select comparison granularity"
-            >
-              <option value="weekly">Weekly</option>
-              <option value="monthly">Monthly</option>
-              <option value="quarterly">Quarterly</option>
-              <option value="yearly">Yearly</option>
-            </select>
-            <button
-              type="button"
-              className="button button-secondary"
-              onClick={() => exportTransactionsToCsv(transactions)}
-            >
-              Export CSV
-            </button>
-          </div>
-        </div>
-
-        <div className="comparison-legend">
-          <span className="legend-dot legend-dot-current" /> This {granularityLabel(granularity)}
-          <span className="legend-dot legend-dot-previous" /> Last {granularityLabel(granularity)}
-        </div>
-
-        <div
-          className={`bar-chart comparison-bar-chart ${isTransitioning ? "bar-chart-transitioning" : ""}`}
-          aria-label="Spending comparison chart"
-        >
-          {comparisonData.map((bucket) => (
-            <div className="bar-column comparison-bar-group" key={bucket.label}>
-              <div className="comparison-bar-pair">
-                <div className="bar-track">
-                  <span
-                    className="bar-fill bar-fill-previous"
-                    style={{ height: `${Math.max((bucket.previous / maxComparisonValue) * 100, 2)}%` }}
-                    title={`${formatCurrency(bucket.previous, "INR")} (${formatCompactCurrency(bucket.previous)})`}
-                  />
-                </div>
-                <div className="bar-track">
-                  <span
-                    className="bar-fill bar-fill-current"
-                    style={{ height: `${Math.max((bucket.current / maxComparisonValue) * 100, 2)}%` }}
-                    title={`${formatCurrency(bucket.current, "INR")} (${formatCompactCurrency(bucket.current)})`}
-                  />
-                </div>
-              </div>
-              <div className="bar-label">{bucket.label}</div>
+      <div className="analytics-hero-grid">
+        <section className="panel chart-panel">
+          <div className="panel-header">
+            <div>
+              <h2 className="section-title">Spending comparison</h2>
+              <p className="section-copy">
+                {percentChange === null
+                  ? `Comparing this ${granularityLabel(granularity)} to last.`
+                  : percentChange >= 0
+                    ? `You spent ${percentChange}% more this ${granularityLabel(granularity)} than last.`
+                    : `You spent ${Math.abs(percentChange)}% less this ${granularityLabel(granularity)} than last.`}
+              </p>
             </div>
-          ))}
-        </div>
-      </section>
+            <div className="chart-panel-actions">
+              <select
+                className="field-input compact-select"
+                value={granularity}
+                onChange={handleGranularityChange}
+                aria-label="Select comparison granularity"
+              >
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+                <option value="quarterly">Quarterly</option>
+                <option value="yearly">Yearly</option>
+              </select>
+              <button
+                type="button"
+                className="button button-secondary"
+                onClick={() => exportTransactionsToCsv(transactions)}
+              >
+                Export CSV
+              </button>
+            </div>
+          </div>
+
+          <div className="chart-headline">{formatCurrency(totalCurrent, "INR")}</div>
+
+          <div className="comparison-legend">
+            <span className="legend-dot legend-dot-current" /> This {granularityLabel(granularity)}
+            <span className="legend-dot legend-dot-previous" /> Last {granularityLabel(granularity)}
+          </div>
+
+          <div
+            className={`bar-chart comparison-bar-chart ${isTransitioning ? "bar-chart-transitioning" : ""}`}
+            aria-label="Spending comparison chart"
+          >
+            <div className="chart-avg-line" style={{ bottom: `${avgLinePercent}%` }} />
+            {comparisonData.map((bucket, index) => (
+              <div className="bar-column comparison-bar-group" key={bucket.label}>
+                <div className="comparison-bar-pair">
+                  <div className="bar-track">
+                    <span
+                      className="bar-fill bar-fill-previous"
+                      style={{ height: `${Math.max((bucket.previous / maxComparisonValue) * 100, 2)}%` }}
+                      title={`${formatCurrency(bucket.previous, "INR")} (${formatCompactCurrency(bucket.previous)})`}
+                    />
+                  </div>
+                  <div className="bar-track">
+                    <span
+                      className={`bar-fill bar-fill-current ${index === peakIndex ? "bar-fill-peak" : "bar-fill-striped"}`}
+                      style={{ height: `${Math.max((bucket.current / maxComparisonValue) * 100, 2)}%` }}
+                      title={`${formatCurrency(bucket.current, "INR")} (${formatCompactCurrency(bucket.current)})`}
+                    >
+                      {index === peakIndex ? (
+                        <span className="bar-peak-callout">{formatCurrency(bucket.current, "INR")}</span>
+                      ) : null}
+                    </span>
+                  </div>
+                </div>
+                <div className="bar-label">{bucket.label}</div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="panel spending-overview-panel">
+          <div className="spending-overview-header">Spending overview</div>
+          <div className="spending-overview-total">
+            {formatCurrency(totalSpend, "INR")}
+            {percentChange !== null ? (
+              <span className={percentChange >= 0 ? "spend-badge spend-badge-up" : "spend-badge spend-badge-down"}>
+                {percentChange >= 0 ? "↑" : "↓"} {Math.abs(percentChange)}%
+              </span>
+            ) : null}
+          </div>
+          <div className="spending-overview-subtitle">
+            From {formatCurrency(overview.monthly_budget_total, "INR")} budget
+          </div>
+
+          {totalSpend > 0 ? (
+            <>
+              <div className="spending-segmented-bar">
+                {topCategories.map((category, index) => (
+                  <div
+                    key={category.category_id}
+                    style={{
+                      width: `${(category.spent_amount / totalSpend) * 100}%`,
+                      background: colorForCategory(category.category_name, index),
+                    }}
+                  />
+                ))}
+                {othersAmount > 0 ? (
+                  <div style={{ width: `${(othersAmount / totalSpend) * 100}%`, background: "var(--line)" }} />
+                ) : null}
+              </div>
+
+              <div className="spending-legend-list">
+                {topCategories.map((category, index) => (
+                  <div className="spending-legend-row" key={category.category_id}>
+                    <span>
+                      <span
+                        className="legend-dot"
+                        style={{ background: colorForCategory(category.category_name, index) }}
+                      />
+                      {category.category_name}
+                    </span>
+                    <strong>{formatCurrency(category.spent_amount, "INR")}</strong>
+                  </div>
+                ))}
+                {othersAmount > 0 ? (
+                  <div className="spending-legend-row">
+                    <span>
+                      <span className="legend-dot" style={{ background: "var(--line)" }} />
+                      Others
+                    </span>
+                    <strong>{formatCurrency(othersAmount, "INR")}</strong>
+                  </div>
+                ) : null}
+              </div>
+            </>
+          ) : (
+            <div className="empty-state">No spending recorded yet this period.</div>
+          )}
+        </section>
+      </div>
 
       <section className="grid content-grid">
         <article className="panel">

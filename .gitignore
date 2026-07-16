@@ -14,10 +14,12 @@ __pycache__/
 .mypy_cache/
 .venv/
 venv/
+*.egg-info/
 
 # Node
 node_modules/
 .next/
+.next-stale-*/
 .next_stale_cache/
 dist/
 coverage/
@@ -28,5 +30,6 @@ npm-debug.log*
 .vscode/
 
 # Database and uploads
+*.db
 *.sqlite3
 uploads/

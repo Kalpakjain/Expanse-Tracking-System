@@ -5,25 +5,29 @@ FastAPI backend for the INR-first Smart Expense Tracker.
 ## Run locally
 
 ```bash
+cd ..
+docker compose -f infra/docker-compose.yml up -d postgres redis
+cd backend
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -e .
+alembic upgrade head
 python -m uvicorn app.main:app --reload
 ```
 
-By default, the backend uses a local SQLite database for quick development.
-Set `DATABASE_URL` to PostgreSQL when you want to run against Postgres.
+Local development should run against PostgreSQL from `infra/docker-compose.yml`.
+SQLite is only an optional fallback for quick unit-test experiments by explicitly setting `DATABASE_URL=sqlite:///...`.
 
 ## Database migrations
 
 Alembic owns the production schema.
+It is also the source of truth for local development.
 
 ```bash
 alembic upgrade head
 ```
 
-Local SQLite development still auto-creates tables by default through `DATABASE_AUTO_CREATE_TABLES=true`.
-For deployed environments, set `DATABASE_AUTO_CREATE_TABLES=false` and run migrations before the API starts.
+Keep `DATABASE_AUTO_CREATE_TABLES=false` for normal local and deployed environments, and run migrations before the API starts.
 
 ## First endpoints
 

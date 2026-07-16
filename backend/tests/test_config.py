@@ -4,10 +4,11 @@ from pydantic import ValidationError
 from app.core.config import Settings
 
 
-def test_development_allows_local_defaults() -> None:
-    settings = Settings()
+def test_local_allows_local_defaults() -> None:
+    settings = Settings(_env_file=None)
 
-    assert settings.app_env == "development"
+    assert settings.app_env == "local"
+    assert settings.is_local is True
     assert settings.auth_required is False
 
 

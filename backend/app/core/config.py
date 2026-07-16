@@ -7,12 +7,12 @@ DEFAULT_AUTH_SECRET = "change-this-secret-before-deploying"
 
 class Settings(BaseSettings):
     app_name: str = "Smart Expense Tracker API"
-    app_env: str = "development"
+    app_env: str = "local"
     app_host: str = "0.0.0.0"
     app_port: int = 8000
     frontend_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
-    database_url: str = "sqlite:///./expense_tracker.db"
-    database_auto_create_tables: bool = True
+    database_url: str = "postgresql://expense_user:expense_password@localhost:5432/expense_tracker"
+    database_auto_create_tables: bool = False
     redis_url: str = "redis://redis:6379/0"
     auth_secret_key: str = DEFAULT_AUTH_SECRET
     auth_token_ttl_minutes: int = 60 * 24 * 7
@@ -34,8 +34,20 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
+    @property
+    def is_local(self) -> bool:
+        return self.app_env.lower() in {"local", "dev", "development"}
+
+    @property
+    def frontend_origin_list(self) -> list[str]:
+        return [origin.strip() for origin in self.frontend_origins.split(",") if origin.strip()]
+
     @model_validator(mode="after")
     def validate_production_settings(self) -> "Settings":
+        origins = [origin.lower() for origin in self.frontend_origin_list]
+        if any("*" in origin for origin in origins):
+            raise ValueError("FRONTEND_ORIGINS cannot contain '*' when credentials are enabled.")
+
         if self.app_env.lower() != "production":
             return self
 
@@ -49,7 +61,6 @@ class Settings(BaseSettings):
             raise ValueError("Production requires a non-SQLite DATABASE_URL.")
 
         local_origins = ["localhost", "127.0.0.1", "0.0.0.0"]
-        origins = [origin.strip().lower() for origin in self.frontend_origins.split(",") if origin.strip()]
         if not origins or any(origin.startswith("http://") for origin in origins):
             raise ValueError("Production FRONTEND_ORIGINS must use HTTPS origins.")
         if any(local_origin in origin for origin in origins for local_origin in local_origins):

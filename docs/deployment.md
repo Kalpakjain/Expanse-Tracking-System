@@ -44,6 +44,7 @@ alembic upgrade head
 ```
 
 The backend container already runs `alembic upgrade head` before starting Uvicorn.
+Use the same migration flow for local development against the PostgreSQL service in `infra/docker-compose.yml`.
 
 Production startup intentionally fails if:
 
@@ -91,5 +92,4 @@ The codebase is deploy-ready, but a public launch still needs external credentia
 - domain and DNS control
 - database credentials
 - Redis credentials
-- WhatsApp provider credentials, if real message delivery is enabled
 - object-storage credentials, if receipt file persistence moves beyond local metadata

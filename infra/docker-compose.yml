@@ -16,7 +16,7 @@ services:
       - "8000:8000"
     environment:
       APP_NAME: Smart Expense Tracker API
-      APP_ENV: development
+      APP_ENV: local
       APP_HOST: 0.0.0.0
       APP_PORT: 8000
       FRONTEND_ORIGINS: http://localhost:3000

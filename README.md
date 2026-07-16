@@ -6,8 +6,8 @@ An INR-first full-stack expense tracker that starts with reliable manual finance
 
 The repository now includes a working product foundation:
 
-- `frontend/`: multi-page Next.js experience for dashboard, categories, reports, receipts, accounts, and savings
-- `backend/`: FastAPI API with auth, accounts, categories, transactions, CSV tools, budgets, reports, and receipts
+- `frontend/`: multi-page Next.js experience for dashboard, transactions, categories, analytics, receipts, accounts, split expenses, and settings
+- `backend/`: FastAPI API with auth, accounts, categories, transactions, CSV tools, budgets, reports, receipts, and group expense splitting
 - `database/`: PostgreSQL reference schema and seed files aligned with the current MVP
 - `infra/`: Docker-based local and deployment-friendly runtime
 - `docs/`: architecture, roadmap, project layers, deployment, and workflow guides
@@ -28,7 +28,7 @@ The current MVP foundation already includes:
 - report overview with category breakdown and budget utilization
 - backend-generated smart insights for reports
 - receipt upload workflow with review, category suggestions, duplicate checks, and ledger posting
-- data-backed bank connections and savings transfer pages
+- data-backed bank account management and split-expense pages
 - health and readiness checks for deployment probes
 - production-oriented Dockerfiles and GitHub Actions CI
 - Alembic migrations for production database setup
@@ -88,7 +88,6 @@ Docker, CI, managed infrastructure, secrets, and public deployment.
 - spending insights in natural language
 - anomaly detection
 - future spending prediction
-- savings recommendations
 - shared or family wallets
 
 ## Recommended Stack
@@ -123,7 +122,9 @@ smart-expense-tracker/
 - `/reports`: summary cards and category-based reporting
 - `/receipts`: receipt upload, review, duplicate warning, and ledger posting
 - `/bank-connections`: local account connection and balance management
-- `/savings-transfer`: savings suggestions from budgets and balances
+- `/transactions`: full transaction ledger with filters
+- `/split`: shared expense groups, balances, friends, and activity
+- `/settings`: logout and password management
 - `/about`: product direction and app overview
 
 ## Local Development
@@ -139,6 +140,7 @@ make up
 Backend:
 
 ```bash
+docker compose -f infra/docker-compose.yml up -d postgres redis
 cd backend
 python3 -m venv .venv
 source .venv/bin/activate
@@ -147,9 +149,9 @@ alembic upgrade head
 python -m uvicorn app.main:app --reload
 ```
 
-The backend uses SQLite by default for local development, so you can get moving without setting up Postgres first.
-Docker uses PostgreSQL 18 through [infra/docker-compose.yml](./infra/docker-compose.yml).
-Local SQLite auto-creates tables by default; hosted/PostgreSQL environments should use Alembic migrations.
+Local development uses PostgreSQL 18 through [infra/docker-compose.yml](./infra/docker-compose.yml).
+Run Alembic migrations before starting the API; migrations are the schema source of truth locally and in production.
+SQLite is only an optional fallback for quick unit-test experiments by explicitly setting `DATABASE_URL=sqlite:///...`.
 
 Frontend:
 
@@ -185,6 +187,11 @@ npm run dev
 - `GET /api/v1/budgets`
 - `POST /api/v1/budgets`
 - `DELETE /api/v1/budgets/{budget_id}`
+- `GET /api/v1/groups`
+- `POST /api/v1/groups`
+- `GET /api/v1/groups/{group_id}/expenses`
+- `POST /api/v1/groups/{group_id}/expenses`
+- `GET /api/v1/groups/{group_id}/balances`
 - `GET /api/v1/receipts`
 - `POST /api/v1/receipts`
 - `POST /api/v1/receipts/{receipt_id}/transaction`
@@ -229,8 +236,13 @@ To make the app truly public, we still need real deployment credentials and runt
 - budgets
 - reports
 - receipts
-- notifications
+- split expenses
 - AI suggestions
+
+## Repository Hygiene
+
+Generated build output, local database files, Python caches, package metadata, and OS artifacts are intentionally ignored.
+Do not commit `.next/`, `.next-stale-*`, `.next_stale_cache/`, `*.db`, `*.sqlite3`, `*.egg-info/`, `__pycache__/`, or `.DS_Store`.
 
 ## Documentation
 

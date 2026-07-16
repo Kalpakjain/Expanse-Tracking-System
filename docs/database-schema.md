@@ -139,7 +139,7 @@ updated_at
 
 ## Current Relationships
 
-- one user has many payment accounts, transactions, budgets, receipts, and notification preferences
+- one user has many payment accounts, transactions, budgets, receipts, groups, and split-expense records
 - one payment account has many transactions
 - one category has many transactions
 - one category has many budgets
@@ -155,7 +155,6 @@ The seed data currently creates:
 - default categories for Food, Transport, Bills, and Salary
 - one sample INR expense transaction for the demo user
 - one sample monthly Food budget for the demo user
-- one default notification-preferences row for the demo user
 
 ## Possible Later Tables
 
@@ -168,11 +167,11 @@ These are optional production extensions once the local app is hosted:
 
 ## Migration Direction
 
-Alembic now owns production schema changes.
+Alembic owns schema changes for local and production databases.
 
 ```bash
 cd backend
 alembic upgrade head
 ```
 
-SQLite local development can still use SQLAlchemy auto-create behavior for fast iteration.
+SQLite is reserved for explicit quick unit-test fallbacks; it is not the default development database.

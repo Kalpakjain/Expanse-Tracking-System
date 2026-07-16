@@ -68,7 +68,7 @@ Help users understand and improve spending.
 - budget overrun alerts
 - unusual spending alerts
 - monthly AI summary
-- savings suggestions
+- split-expense summaries
 
 ### Exit Criteria
 
@@ -76,7 +76,7 @@ Help users understand and improve spending.
 - alerts feel accurate enough to trust
 
 Status:
-Completed locally with report insights, budget alerts, recurring reminders, notification previews, and savings suggestions.
+Completed locally with report insights, budget alerts, recurring reminders, and split-expense summaries.
 
 ## Phase 4: Scale and Polish
 

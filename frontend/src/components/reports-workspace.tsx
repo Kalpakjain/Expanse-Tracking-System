@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import type { ChangeEvent } from "react";
 
 import { BudgetForm } from "@/components/budget-form";
 import { deleteBudget, getReportsOverview } from "@/lib/api";
@@ -156,7 +157,7 @@ function exportTransactionsToCsv(transactions: Transaction[]) {
 }
 
 export function ReportsWorkspace() {
-  const { transactions, categories, statusLabel, loadDashboard } = useFinanceDashboard();
+  const { transactions, categories, loadDashboard } = useFinanceDashboard();
   const [overview, setOverview] = useState<ReportsOverview>({
     summary: {
       total_income: 0,
@@ -172,12 +173,13 @@ export function ReportsWorkspace() {
     over_budget_count: 0,
     budgeted_categories: 0,
   });
-  const [reportMessage, setReportMessage] = useState("Loading report overview...");
+  const [reportMessage, setReportMessage] = useState("");
   const [deletingBudgetId, setDeletingBudgetId] = useState<string | null>(null);
   const [editingBudget, setEditingBudget] = useState<Budget | null>(null);
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [granularity, setGranularity] = useState<Granularity>("monthly");
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   const fallbackBreakdown = buildCategorySpendBreakdown(transactions).map((entry) => {
     const matchingCategory = categories.find((category) => category.name === entry.name);
@@ -197,7 +199,9 @@ export function ReportsWorkspace() {
     try {
       const nextOverview = await getReportsOverview();
       setOverview(nextOverview);
-      setReportMessage(successMessage ?? "Report overview synced from the backend.");
+      if (successMessage) {
+        setReportMessage(successMessage);
+      }
     } catch {
       setReportMessage("Using local fallback report data while the reports API settles.");
     }
@@ -206,6 +210,14 @@ export function ReportsWorkspace() {
   useEffect(() => {
     void loadReports();
   }, [loadReports]);
+
+  useEffect(() => {
+    if (!reportMessage) {
+      return;
+    }
+    const timeoutId = window.setTimeout(() => setReportMessage(""), 3000);
+    return () => window.clearTimeout(timeoutId);
+  }, [reportMessage]);
 
   const breakdown = overview.category_breakdown.length ? overview.category_breakdown : fallbackBreakdown;
   const comparisonData = useMemo(
@@ -239,6 +251,15 @@ export function ReportsWorkspace() {
     }
   }
 
+  function handleGranularityChange(event: ChangeEvent<HTMLSelectElement>) {
+    const nextGranularity = event.target.value as Granularity;
+    setIsTransitioning(true);
+    window.setTimeout(() => {
+      setGranularity(nextGranularity);
+      setIsTransitioning(false);
+    }, 150);
+  }
+
   return (
     <main className="page-shell">
       <section className="page-header-compact">
@@ -246,11 +267,9 @@ export function ReportsWorkspace() {
           <h1>Analytics</h1>
           <p>Budgets, categories, and trends</p>
         </div>
-        <div className="page-header-actions">
-          <span className="button button-primary">Reporting mode</span>
-          <span className="button button-secondary">{reportMessage || statusLabel}</span>
-        </div>
       </section>
+
+      {reportMessage ? <div className="toast-inline">{reportMessage}</div> : null}
 
       <section className="grid stats-grid">
         <article className="panel stat-card">
@@ -293,7 +312,7 @@ export function ReportsWorkspace() {
             <select
               className="field-input compact-select"
               value={granularity}
-              onChange={(event) => setGranularity(event.target.value as Granularity)}
+              onChange={handleGranularityChange}
               aria-label="Select comparison granularity"
             >
               <option value="weekly">Weekly</option>
@@ -316,7 +335,10 @@ export function ReportsWorkspace() {
           <span className="legend-dot legend-dot-previous" /> Last {granularityLabel(granularity)}
         </div>
 
-        <div className="bar-chart comparison-bar-chart" aria-label="Spending comparison chart">
+        <div
+          className={`bar-chart comparison-bar-chart ${isTransitioning ? "bar-chart-transitioning" : ""}`}
+          aria-label="Spending comparison chart"
+        >
           {comparisonData.map((bucket) => (
             <div className="bar-column comparison-bar-group" key={bucket.label}>
               <div className="comparison-bar-pair">

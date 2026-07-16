@@ -29,8 +29,8 @@ FastAPI also connects to:
 - transaction forms
 - category and budget management
 - dashboards and charts
-- WhatsApp preference management
 - receipt upload UI
+- split expense workspace
 - smart suggestions and alerts
 
 ## Backend Responsibilities
@@ -39,7 +39,7 @@ FastAPI also connects to:
 - transaction CRUD APIs
 - budget logic
 - reporting APIs
-- notification-preference APIs
+- group expense splitting APIs
 - OCR job orchestration
 - AI suggestion endpoints
 - recurring transaction detection
@@ -63,8 +63,8 @@ FastAPI also connects to:
 
 - normalized financial records
 - audit-friendly timestamps
-- category, budget, and notification settings persistence
-- easy path from SQLite development to PostgreSQL deployment
+- category, budget, receipt, and split-expense persistence
+- PostgreSQL-first development and deployment with Alembic migrations
 
 ### Worker Layer
 
@@ -92,6 +92,7 @@ FastAPI also connects to:
 - `/budgets`
 - `/reports`
 - `/receipts`
+- `/groups`
 - `/insights`
 - `/alerts`
 

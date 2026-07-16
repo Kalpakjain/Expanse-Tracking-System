@@ -1,7 +1,0 @@
-{
-  "/page": "app/page.js",
-  "/categories/page": "app/categories/page.js",
-  "/reports/page": "app/reports/page.js",
-  "/whatsapp-notifications/page": "app/whatsapp-notifications/page.js",
-  "/about/page": "app/about/page.js"
-}

@@ -39,14 +39,13 @@ Reduce manual follow-up work after the records are captured.
 
 Scope:
 
-- notification preferences
-- daily digest previews
-- weekly summary previews
+- receipt review workflows
+- duplicate detection
 - budget threshold alerts
 - recurring-expense reminders
 
 Current status:
-Implemented locally with saved preferences and backend-generated preview messages. Real WhatsApp delivery can be attached during deployment.
+Implemented locally through receipt review, duplicate checks, and backend insight rules.
 
 ## Layer 4: Intelligence
 
@@ -62,7 +61,7 @@ Scope:
 - natural-language insights
 
 Current status:
-Implemented locally through receipt review, category suggestions, duplicate checks, budget insights, recurring reminders, and savings suggestions. Full external OCR or hosted AI providers can be attached later.
+Implemented locally through receipt review, category suggestions, duplicate checks, budget insights, and split-expense summaries. Full external OCR or hosted AI providers can be attached later.
 
 ## Layer 5: Platform
 

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ChangeEvent } from "react";
 
+import { CategorySpendChart } from "@/components/category-spend-chart";
 import { getReportsOverview } from "@/lib/api";
 import { formatCurrency } from "@/lib/format";
 import { useFinanceDashboard } from "@/lib/use-finance-dashboard";
@@ -402,6 +403,7 @@ export function ReportsWorkspace() {
           <p className="section-copy">
             This is the first layer of reporting. It shows where the money is going by category.
           </p>
+          <CategorySpendChart breakdown={breakdown} />
           <div className="list">
             {breakdown.length ? (
               breakdown.map((entry) => (

@@ -986,7 +986,7 @@ a {
 .bar-chart {
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: minmax(36px, 1fr);
+  grid-auto-columns: minmax(48px, 1fr);
   gap: 10px;
   align-items: end;
   height: 200px;
@@ -1016,7 +1016,7 @@ a {
   align-items: flex-end;
   overflow: visible;
   border-radius: 6px;
-  background: #eee7dc;
+  background: #e3d9c8;
 }
 
 .bar-fill {
@@ -1035,11 +1035,12 @@ a {
 .legend-dot-current { background: var(--primary); }
 .legend-dot-previous { background: var(--line); }
 .comparison-bar-group { display: flex; flex-direction: column; align-items: center; gap: 6px; position: relative; z-index: 1; }
-.comparison-bar-pair { display: flex; gap: 4px; align-items: flex-end; height: 100%; width: 100%; }
+.comparison-bar-pair { display: flex; gap: 6px; align-items: flex-end; height: 100%; width: 100%; }
 .bar-fill-current { background: var(--primary); }
-.bar-fill-previous { background: var(--line); }
+.bar-fill-previous { background: #c9bda9; border: 1px solid #b8a993; }
 .bar-fill-striped {
-  background: repeating-linear-gradient(45deg, var(--line) 0px, var(--line) 3px, #f1e9db 3px, #f1e9db 6px);
+  background: repeating-linear-gradient(180deg, var(--primary));
+  position: relative;
 }
 .bar-fill-peak {
   background: linear-gradient(180deg, #c23f70, var(--primary));
@@ -1065,6 +1066,25 @@ a {
   z-index: 0;
   border-top: 1.5px dashed #c9bda9;
   pointer-events: none;
+}
+
+.chart-tooltip {
+  background: var(--secondary);
+  color: var(--panel);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 6px 10px;
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+}
+
+.chart-empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: var(--muted);
+  font-size: 13px;
 }
 
 .spending-overview-panel {

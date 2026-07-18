@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ChangeEvent } from "react";
 
-import { CategorySpendChart } from "@/components/category-spend-chart";
+import { SpendingComparisonChart } from "@/components/spending-comparison-chart";
 import { getReportsOverview } from "@/lib/api";
 import { formatCurrency } from "@/lib/format";
 import { useFinanceDashboard } from "@/lib/use-finance-dashboard";
@@ -115,12 +115,6 @@ function buildComparisonAnalysis(transactions: Transaction[], granularity: Granu
   });
 }
 
-function formatCompactCurrency(amount: number): string {
-  if (amount >= 100000) return `Rs ${(amount / 100000).toFixed(1)}L`;
-  if (amount >= 1000) return `Rs ${(amount / 1000).toFixed(1)}k`;
-  return `Rs ${Math.round(amount)}`;
-}
-
 function granularityLabel(granularity: Granularity): string {
   if (granularity === "weekly") return "week";
   if (granularity === "monthly") return "month";
@@ -157,7 +151,6 @@ export function ReportsWorkspace() {
   });
   const [reportMessage, setReportMessage] = useState("");
   const [granularity, setGranularity] = useState<Granularity>("monthly");
-  const [isTransitioning, setIsTransitioning] = useState(false);
 
   const fallbackBreakdown = buildCategorySpendBreakdown(transactions).map((entry) => {
     const matchingCategory = categories.find((category) => category.name === entry.name);
@@ -199,21 +192,11 @@ export function ReportsWorkspace() {
     () => buildComparisonAnalysis(transactions, granularity),
     [transactions, granularity],
   );
-  const maxComparisonValue = Math.max(
-    ...comparisonData.flatMap((bucket) => [bucket.current, bucket.previous]),
-    1,
-  );
   const totalCurrent = comparisonData.reduce((sum, bucket) => sum + bucket.current, 0);
   const totalPrevious = comparisonData.reduce((sum, bucket) => sum + bucket.previous, 0);
   const percentChange = totalPrevious > 0
     ? Math.round(((totalCurrent - totalPrevious) / totalPrevious) * 100)
     : null;
-  const peakIndex = comparisonData.reduce(
-    (best, bucket, index) => (bucket.current > comparisonData[best].current ? index : best),
-    0,
-  );
-  const avgValue = comparisonData.reduce((sum, bucket) => sum + bucket.current, 0) / comparisonData.length;
-  const avgLinePercent = Math.min((avgValue / maxComparisonValue) * 100, 100);
   const spendingBreakdown = [...breakdown].sort((left, right) => right.spent_amount - left.spent_amount);
   const totalSpend = spendingBreakdown.reduce((sum, entry) => sum + entry.spent_amount, 0);
   const topCategories = spendingBreakdown.slice(0, 2);
@@ -221,12 +204,7 @@ export function ReportsWorkspace() {
   const shouldShowOthers = spendingBreakdown.length > 2 && othersAmount > 0;
 
   function handleGranularityChange(event: ChangeEvent<HTMLSelectElement>) {
-    const nextGranularity = event.target.value as Granularity;
-    setIsTransitioning(true);
-    window.setTimeout(() => {
-      setGranularity(nextGranularity);
-      setIsTransitioning(false);
-    }, 150);
+    setGranularity(event.target.value as Granularity);
   }
 
   function colorForCategory(name: string, fallbackIndex: number) {
@@ -305,37 +283,7 @@ export function ReportsWorkspace() {
             <span className="legend-dot legend-dot-previous" /> Last {granularityLabel(granularity)}
           </div>
 
-          <div
-            className={`bar-chart comparison-bar-chart ${isTransitioning ? "bar-chart-transitioning" : ""}`}
-            aria-label="Spending comparison chart"
-          >
-            <div className="chart-avg-line" style={{ bottom: `${avgLinePercent}%` }} />
-            {comparisonData.map((bucket, index) => (
-              <div className="bar-column comparison-bar-group" key={bucket.label}>
-                <div className="comparison-bar-pair">
-                  <div className="bar-track">
-                    <span
-                      className="bar-fill bar-fill-previous"
-                      style={{ height: `${Math.max((bucket.previous / maxComparisonValue) * 100, 2)}%` }}
-                      title={`${formatCurrency(bucket.previous, "INR")} (${formatCompactCurrency(bucket.previous)})`}
-                    />
-                  </div>
-                  <div className="bar-track">
-                    <span
-                      className={`bar-fill bar-fill-current ${index === peakIndex ? "bar-fill-peak" : "bar-fill-striped"}`}
-                      style={{ height: `${Math.max((bucket.current / maxComparisonValue) * 100, 2)}%` }}
-                      title={`${formatCurrency(bucket.current, "INR")} (${formatCompactCurrency(bucket.current)})`}
-                    >
-                      {index === peakIndex ? (
-                        <span className="bar-peak-callout">{formatCurrency(bucket.current, "INR")}</span>
-                      ) : null}
-                    </span>
-                  </div>
-                </div>
-                <div className="bar-label">{bucket.label}</div>
-              </div>
-            ))}
-          </div>
+          <SpendingComparisonChart data={comparisonData} periodLabel={granularityLabel(granularity)} />
         </section>
 
         <section className="panel spending-overview-panel">
@@ -403,7 +351,6 @@ export function ReportsWorkspace() {
           <p className="section-copy">
             This is the first layer of reporting. It shows where the money is going by category.
           </p>
-          <CategorySpendChart breakdown={breakdown} />
           <div className="list">
             {breakdown.length ? (
               breakdown.map((entry) => (

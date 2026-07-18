@@ -86,7 +86,6 @@ export function ReceiptsWorkspace() {
     }
   }
 
-  const latestReceipt = receipts[0];
   const reviewReadyCount = receipts.filter((receipt) => receipt.status === "review_ready").length;
   const postedCount = receipts.filter((receipt) => receipt.status === "posted").length;
   const duplicateWatchCount = receipts.filter((receipt) => receipt.duplicate_count > 0).length;
@@ -148,49 +147,22 @@ export function ReceiptsWorkspace() {
 
   return (
     <main className="page-shell">
-      <section className="dashboard-hero">
+      <div className="page-header-compact">
         <div>
-          <span className="eyebrow">Automation</span>
-          <h1>Receipt capture and smart review.</h1>
-          <p>
-            Upload receipts, extract review-ready details, and post approved expenses into your
-            ledger.
-          </p>
-          <div className="hero-actions">
-            <span className="button button-primary">Receipt review flow</span>
-            <span className="button button-secondary">{message}</span>
-          </div>
+          <h1>Receipts</h1>
+          <p className="page-header-subtitle">Capture, review, and post receipts to your ledger</p>
         </div>
+      </div>
 
-        <div className="hero-balance-card">
-          <div className="stat-label">Receipts processed</div>
-          <div className="hero-balance-value">{receipts.length}</div>
-          <div className="stat-footnote">{reviewReadyCount} ready for review • {postedCount} posted</div>
+      <div className="balance-summary-card">
+        <div>
+          <div className="balance-summary-label">Receipts processed</div>
+          <div className="balance-summary-value">{receipts.length}</div>
+          <div className="balance-summary-footnote">{reviewReadyCount} ready for review - {postedCount} posted</div>
         </div>
-      </section>
+      </div>
 
-      <section className="grid stats-grid">
-        <article className="panel stat-card">
-          <div className="stat-label">Latest merchant</div>
-          <div className="stat-value compact-stat">{latestReceipt?.merchant_name ?? "None"}</div>
-          <div className="stat-footnote">Most recent receipt upload</div>
-        </article>
-        <article className="panel stat-card">
-          <div className="stat-label">Suggested amount</div>
-          <div className="stat-value">
-            {latestReceipt?.suggested_amount
-              ? formatCurrency(latestReceipt.suggested_amount, "INR")
-              : "Review"}
-          </div>
-          <div className="stat-footnote">Optional amount hint from upload</div>
-        </article>
-        <article className="panel stat-card">
-          <div className="stat-label">Top suggestion</div>
-          <div className="stat-value compact-stat">
-            {latestReceipt?.suggested_category_name ?? "Pending"}
-          </div>
-          <div className="stat-footnote">Category candidate</div>
-        </article>
+      <section className="grid stats-grid stats-grid-3">
         <article className="panel stat-card">
           <div className="stat-label">Avg confidence</div>
           <div className="stat-value">{Math.round(averageConfidence * 100)}%</div>
@@ -201,13 +173,18 @@ export function ReceiptsWorkspace() {
           <div className="stat-value">{duplicateWatchCount}</div>
           <div className="stat-footnote">Receipts matching recent expenses</div>
         </article>
+        <article className="panel stat-card">
+          <div className="stat-label">Awaiting review</div>
+          <div className="stat-value">{reviewReadyCount}</div>
+          <div className="stat-footnote">Not yet posted to your ledger</div>
+        </article>
       </section>
 
       <section className="grid content-grid">
         <article className="panel">
           <h2 className="section-title">Upload receipt</h2>
           <p className="section-copy">
-            Attach an image or PDF receipt and add optional hints to improve the first suggestion.
+            Attach an image or PDF receipt — we&apos;ll extract the details automatically. Add hints only if you want to override what we detect.
           </p>
 
           <form className="expense-form" onSubmit={handleSubmit}>

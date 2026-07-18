@@ -867,6 +867,12 @@ a {
   background: #f8f0e6;
 }
 
+.button-danger-outline {
+  border: 1px solid #c91515;
+  color: #c91515;
+  background: transparent;
+}
+
 .button-tertiary {
   min-height: 38px;
   padding: 0 14px;
@@ -906,6 +912,10 @@ a {
 .stats-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
+}
+
+.stats-grid-3 {
+  grid-template-columns: repeat(3, 1fr);
 }
 
 .stat-card {
@@ -983,90 +993,11 @@ a {
   margin: 4px 0 2px;
 }
 
-.bar-chart {
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: minmax(48px, 1fr);
-  gap: 10px;
-  align-items: end;
-  height: 200px;
-  margin-top: 20px;
-  transition: opacity 0.25s ease, transform 0.25s ease;
-}
-
-.chart-panel .bar-chart { position: relative; }
-
-.bar-column {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-end;
-  height: 100%;
-  gap: 8px;
-  min-width: 0;
-  text-align: center;
-}
-
-.bar-track {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  flex: 1;
-  display: flex;
-  align-items: flex-end;
-  overflow: visible;
-  border-radius: 6px;
-  background: #e3d9c8;
-}
-
-.bar-fill {
-  display: block;
-  width: 100%;
-  border-radius: 6px 6px 0 0;
-  background: linear-gradient(180deg, var(--primary), var(--accent));
-  transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.bar-chart-transitioning { opacity: 0.3; transform: scale(0.98); transition: opacity 0.15s ease, transform 0.15s ease; }
-
 .chart-panel-actions { display: flex; gap: 8px; align-items: center; }
 .comparison-legend { display: flex; gap: 16px; align-items: center; font-size: 12px; color: var(--muted); margin-bottom: 12px; }
 .legend-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; }
 .legend-dot-current { background: var(--primary); }
 .legend-dot-previous { background: var(--line); }
-.comparison-bar-group { display: flex; flex-direction: column; align-items: center; gap: 6px; position: relative; z-index: 1; }
-.comparison-bar-pair { display: flex; gap: 6px; align-items: flex-end; height: 100%; width: 100%; }
-.bar-fill-current { background: var(--primary); }
-.bar-fill-previous { background: #c9bda9; border: 1px solid #b8a993; }
-.bar-fill-striped {
-  background: repeating-linear-gradient(180deg, var(--primary));
-  position: relative;
-}
-.bar-fill-peak {
-  background: linear-gradient(180deg, #c23f70, var(--primary));
-  position: relative;
-}
-.bar-peak-callout {
-  position: absolute;
-  top: -34px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: var(--primary);
-  color: var(--panel);
-  font-size: 11px;
-  font-weight: 500;
-  padding: 4px 9px;
-  border-radius: 8px;
-  white-space: nowrap;
-}
-.chart-avg-line {
-  position: absolute;
-  left: 0;
-  right: 0;
-  z-index: 0;
-  border-top: 1.5px dashed #c9bda9;
-  pointer-events: none;
-}
 
 .chart-tooltip {
   background: var(--secondary);
@@ -1076,6 +1007,11 @@ a {
   padding: 6px 10px;
   border-radius: 8px;
   box-shadow: var(--shadow);
+}
+
+.chart-tooltip-label {
+  margin-bottom: 4px;
+  font-weight: 700;
 }
 
 .chart-empty-state {
@@ -1150,18 +1086,6 @@ a {
 
 .spending-legend-row:last-child {
   border-bottom: none;
-}
-
-.bar-label,
-.bar-value {
-  color: #45464d;
-  font-size: 0.78rem;
-  overflow-wrap: anywhere;
-}
-
-.bar-value {
-  color: var(--text);
-  font-weight: 700;
 }
 
 .pie-layout {
@@ -1245,6 +1169,131 @@ a {
   border-radius: 12px;
   background: var(--primary-soft);
   color: var(--primary);
+}
+
+.balance-summary-card {
+  background: var(--secondary);
+  border-radius: 20px;
+  padding: 20px 22px;
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.balance-summary-label {
+  font-size: 12px;
+  color: #c7cbd6;
+}
+
+.balance-summary-value {
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--panel);
+  margin-top: 2px;
+}
+
+.balance-summary-footnote {
+  font-size: 11.5px;
+  color: #9aa1b3;
+  margin-top: 4px;
+}
+
+.balance-summary-avatars {
+  display: flex;
+  gap: 8px;
+}
+
+.balance-summary-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--panel);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.account-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.account-card {
+  position: relative;
+  background: var(--panel);
+  border-radius: 16px;
+  box-shadow: 0 8px 22px rgba(31, 42, 68, 0.08);
+  padding: 16px;
+}
+
+.account-card-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.account-card-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--panel);
+  font-size: 17px;
+  margin-bottom: 12px;
+}
+
+.account-card-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.account-card-subtitle {
+  font-size: 11.5px;
+  color: var(--muted);
+  margin-bottom: 10px;
+  text-transform: capitalize;
+}
+
+.account-card-balance {
+  font-size: 19px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 12px;
+}
+
+.account-card-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.account-card-add {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: var(--panel);
+  border: 1.5px dashed var(--line);
+  color: var(--muted);
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.account-card-add-icon {
+  font-size: 22px;
 }
 
 .holding-table {
@@ -3666,10 +3715,6 @@ a {
 @media (max-width: 620px) {
   .auth-visual-panel {
     display: none;
-  }
-
-  .bar-chart {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .dashboard-hero {

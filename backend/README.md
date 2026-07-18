@@ -82,6 +82,9 @@ Keep `DATABASE_AUTO_CREATE_TABLES=false` for normal local and deployed environme
 - `OTP_RATE_LIMIT_COUNT`
 - `OTP_RATE_LIMIT_WINDOW_MINUTES`
 - `OTP_MAX_ATTEMPTS`
+- `GEMINI_API_KEY`
+- `GEMINI_MODEL`
+- `RECEIPT_EXTRACTION_ENABLED`
 
 Use [`.env.example`](./.env.example) as the starting point for local or hosted configuration.
 Use [`.env.production.example`](./.env.production.example) for production deployments.
@@ -96,3 +99,7 @@ Use [`.env.production.example`](./.env.production.example) for production deploy
 6. Restart the FastAPI backend.
 
 Brevo's free tier supports 300 emails per day. OTPs are valid for 5 minutes by default, and each email can request at most 3 OTPs per 10-minute window.
+
+## Gemini receipt extraction
+
+Receipt uploads use Google Gemini vision extraction when `GEMINI_API_KEY` is set and `RECEIPT_EXTRACTION_ENABLED=true`. If Gemini is unavailable, rate-limited, or the key is missing, uploads fall back to the existing heuristic extraction automatically.

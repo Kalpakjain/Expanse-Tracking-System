@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { AccountForm } from "@/components/account-form";
-import { getAccounts } from "@/lib/api";
+import { deactivateAccount, getAccounts } from "@/lib/api";
 import { formatCurrency } from "@/lib/format";
 import type { PaymentAccount } from "@/lib/types";
 
@@ -38,8 +38,6 @@ export function BankConnectionsWorkspace() {
   }, [loadAccounts]);
 
   const syncedBalance = accounts.reduce((sum, account) => sum + account.current_balance, 0);
-  const bankLikeAccounts = accounts.filter((account) => ["bank", "credit_card", "upi", "wallet"].includes(account.type));
-  const defaultAccount = accounts.find((account) => account.is_default);
 
   function openAccountForm(account?: PaymentAccount) {
     setEditingAccount(account ?? null);
@@ -51,79 +49,93 @@ export function BankConnectionsWorkspace() {
     setIsAccountFormOpen(false);
   }
 
+  async function handleDeactivate(accountId: string) {
+    if (!window.confirm("Deactivate this account? It will no longer appear in your active balances.")) return;
+    try {
+      await deactivateAccount(accountId);
+      await loadAccounts("Account deactivated.");
+    } catch {
+      setMessage("Could not deactivate this account.");
+    }
+  }
+
   return (
     <main className="page-shell">
-      <section className="dashboard-hero">
+      <div className="page-header-compact">
         <div>
-          <span className="eyebrow">Bank linking</span>
-          <h1>Connected accounts from your local ledger.</h1>
-          <p>
-            Manage bank, wallet, cash, UPI, and card accounts locally. These balances power the
-            dashboard, receipts, and spending analysis.
-          </p>
-          <div className="hero-actions">
-            <button className="button button-primary" type="button" onClick={() => openAccountForm()}>
-              Add account
-            </button>
-            <span className="button button-secondary">{message}</span>
-          </div>
+          <h1>Accounts</h1>
+          <p className="page-header-subtitle">Manage your wallets, bank, and card balances</p>
         </div>
-        <div className="hero-balance-card">
-          <div className="stat-label">Synced local balance</div>
-          <div className="hero-balance-value">{formatCurrency(syncedBalance, "INR")}</div>
-          <div className="stat-footnote">
-            {accounts.length} active accounts{defaultAccount ? ` • default: ${defaultAccount.name}` : ""}
-          </div>
-        </div>
-      </section>
+        <button className="button button-primary" type="button" onClick={() => openAccountForm()}>
+          + Add account
+        </button>
+      </div>
 
-      <section className="grid stats-grid">
-        <article className="panel stat-card">
-          <div className="stat-label">Bank-like links</div>
-          <div className="stat-value">{bankLikeAccounts.length}</div>
-          <div className="stat-footnote">Bank, card, UPI, and wallet accounts</div>
-        </article>
-        <article className="panel stat-card">
-          <div className="stat-label">Cash accounts</div>
-          <div className="stat-value">{accounts.filter((account) => account.type === "cash").length}</div>
-          <div className="stat-footnote">Manual cash balance tracking</div>
-        </article>
-        <article className="panel stat-card">
-          <div className="stat-label">Default account</div>
-          <div className="stat-value compact-stat">{defaultAccount?.name ?? "None"}</div>
-          <div className="stat-footnote">Used for quick expense posting</div>
-        </article>
-        <article className="panel stat-card">
-          <div className="stat-label">Connection mode</div>
-          <div className="stat-value compact-stat">Local</div>
-          <div className="stat-footnote">Ready for provider API credentials at deployment</div>
-        </article>
-      </section>
+      <div className="balance-summary-card">
+        <div>
+          <div className="balance-summary-label">Combined balance</div>
+          <div className="balance-summary-value">{formatCurrency(syncedBalance, "INR")}</div>
+          <div className="balance-summary-footnote">
+            Across {accounts.length} active account{accounts.length === 1 ? "" : "s"}
+          </div>
+        </div>
+        <div className="balance-summary-avatars">
+          {accounts.slice(0, 4).map((account, i) => (
+            <div
+              key={account.id}
+              className="balance-summary-avatar"
+              style={{ background: ["var(--primary)", "var(--accent)", "var(--secondary)", "var(--line)"][i % 4] }}
+            >
+              {account.name.charAt(0).toUpperCase()}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {message ? <div className="toast-inline">{message}</div> : null}
 
       <section className="grid content-grid">
         <article className="panel">
           <h2 className="section-title">Connected accounts</h2>
           <p className="section-copy">Real account records stored through the FastAPI backend.</p>
-          <div className="analysis-card-grid">
+          <div className="account-grid">
             {accounts.map((account) => (
-              <div className="mini-analysis-card bank-card" key={account.id}>
-                <span className="nav-icon bank-icon" aria-hidden="true">
-                  {typeIcons[account.type]}
-                </span>
-                <div className="item-title">{account.name}</div>
-                <div className="item-subtitle">
+              <div className="account-card" key={account.id}>
+                {account.is_default && <span className="account-card-badge">DEFAULT</span>}
+                <div
+                  className="account-card-icon"
+                  style={{
+                    background: {
+                      bank: "var(--secondary)",
+                      cash: "var(--accent)",
+                      upi: "var(--primary)",
+                      credit_card: "#8f2450",
+                      wallet: "var(--primary)",
+                    }[account.type],
+                  }}
+                >
+                  <span className="nav-icon" aria-hidden="true">{typeIcons[account.type]}</span>
+                </div>
+                <div className="account-card-name">{account.name}</div>
+                <div className="account-card-subtitle">
                   {account.type.replace("_", " ")}
-                  {account.institution_name ? ` • ${account.institution_name}` : ""}
+                  {account.institution_name ? ` - ${account.institution_name}` : ""}
                 </div>
-                <div className="stat-value compact-stat">
-                  {formatCurrency(account.current_balance, account.currency_code)}
+                <div className="account-card-balance">{formatCurrency(account.current_balance, account.currency_code)}</div>
+                <div className="account-card-actions">
+                  <button className="button button-secondary compact-button" type="button" onClick={() => openAccountForm(account)}>
+                    Edit
+                  </button>
+                  <button className="button button-danger-outline compact-button" type="button" onClick={() => handleDeactivate(account.id)}>
+                    Deactivate
+                  </button>
                 </div>
-                <div className="stat-footnote">{account.is_default ? "Default account" : "Active"}</div>
-                <button className="button button-secondary compact-button" type="button" onClick={() => openAccountForm(account)}>
-                  Edit
-                </button>
               </div>
             ))}
+            <button type="button" className="account-card account-card-add" onClick={() => openAccountForm()}>
+              <span className="account-card-add-icon">+</span>
+              Add another account
+            </button>
           </div>
         </article>
 

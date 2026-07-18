@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     app_env: str = "local"
     app_host: str = "0.0.0.0"
     app_port: int = 8000
-    frontend_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
+    frontend_origins: str = "http://localhost:3000,http://127.0.0.1:3000,http://localhost:3001,http://127.0.0.1:3001"
     database_url: str = "postgresql://expense_user:expense_password@localhost:5432/expense_tracker"
     database_auto_create_tables: bool = False
     redis_url: str = "redis://redis:6379/0"
@@ -31,6 +31,9 @@ class Settings(BaseSettings):
     otp_rate_limit_window_minutes: int = 10
     otp_max_attempts: int = 5
     expose_dev_otp: bool = False
+    gemini_api_key: str = ""
+    gemini_model: str = "gemini-2.5-flash"
+    receipt_extraction_enabled: bool = True
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

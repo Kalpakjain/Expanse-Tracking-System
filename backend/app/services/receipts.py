@@ -9,6 +9,7 @@ from app.db.models import Category, Receipt, Transaction, User
 from app.schemas.receipt import ReceiptRead, ReceiptTransactionCreate
 from app.schemas.transaction import TransactionCreate, TransactionRead
 from app.services.finance import create_transaction
+from app.services.receipt_extraction import extract_receipt_data
 
 
 def list_receipts(db: Session, user: User) -> list[ReceiptRead]:
@@ -29,8 +30,25 @@ async def create_receipt(
     amount_hint: float | None,
 ) -> ReceiptRead:
     file_bytes = await file.read()
-    category = _suggest_category(db, user, file.filename or "", merchant_hint)
-    merchant_name = merchant_hint.strip() or _merchant_from_filename(file.filename or "Receipt")
+    extraction = extract_receipt_data(file_bytes, file.content_type or "application/octet-stream")
+    extracted_merchant = extraction.get("merchant_name") if extraction else None
+    extracted_amount = extraction.get("amount") if extraction else None
+    extracted_confidence = extraction.get("confidence") if extraction else None
+    extracted_category = extraction.get("category_guess") if extraction else None
+    extracted_date = extraction.get("date") if extraction else None
+
+    category = _suggest_category(
+        db,
+        user,
+        file.filename or "",
+        merchant_hint,
+        str(extracted_category) if extracted_category else None,
+    )
+    merchant_name = merchant_hint.strip() or str(extracted_merchant or "").strip() or _merchant_from_filename(file.filename or "Receipt")
+    suggested_amount = amount_hint if amount_hint is not None else _safe_amount(extracted_amount)
+    confidence_score = _safe_confidence(extracted_confidence)
+    if confidence_score is None:
+        confidence_score = 0.72 if merchant_hint or amount_hint else 0.58
 
     receipt = Receipt(
         user_id=user.id,
@@ -38,11 +56,11 @@ async def create_receipt(
         content_type=file.content_type or "application/octet-stream",
         file_size=len(file_bytes),
         status="review_ready",
-        extracted_text=_build_extracted_text(merchant_name, amount_hint, category),
+        extracted_text=_build_extracted_text(merchant_name, suggested_amount, category, str(extracted_date) if extracted_date else None),
         merchant_name=merchant_name,
-        suggested_amount=amount_hint,
+        suggested_amount=suggested_amount,
         suggested_category_id=category.id if category else None,
-        confidence_score=0.72 if merchant_hint or amount_hint else 0.58,
+        confidence_score=confidence_score,
     )
     db.add(receipt)
     db.commit()
@@ -94,7 +112,25 @@ def create_transaction_from_receipt(
     return transaction
 
 
-def _suggest_category(db: Session, user: User, file_name: str, merchant_hint: str) -> Category | None:
+def _suggest_category(
+    db: Session,
+    user: User,
+    file_name: str,
+    merchant_hint: str,
+    category_guess: str | None = None,
+) -> Category | None:
+    if category_guess:
+        category_name = "Transport" if category_guess.strip().lower() == "travel" else category_guess.strip()
+        category = db.scalar(
+            select(Category).where(
+                func.lower(Category.name) == category_name.lower(),
+                Category.type == "expense",
+                or_(Category.user_id.is_(None), Category.user_id == user.id),
+            )
+        )
+        if category is not None:
+            return category
+
     text = f"{file_name} {merchant_hint}".lower()
     category_name = "Food"
     if any(keyword in text for keyword in ["uber", "ola", "bus", "train", "metro", "fuel"]):
@@ -126,10 +162,34 @@ def _build_extracted_text(
     merchant_name: str,
     amount_hint: float | None,
     category: Category | None,
+    extracted_date: str | None = None,
 ) -> str:
     amount_text = f"Amount candidate: INR {amount_hint:.2f}" if amount_hint else "Amount candidate: needs review"
     category_text = f"Suggested category: {category.name}" if category else "Suggested category: needs review"
-    return f"Merchant candidate: {merchant_name}\n{amount_text}\n{category_text}"
+    extracted_text = f"Merchant candidate: {merchant_name}\n{amount_text}\n{category_text}"
+    if extracted_date:
+        extracted_text = f"{extracted_text}\nReceipt date candidate: {extracted_date}"
+    return extracted_text
+
+
+def _safe_amount(value: object) -> float | None:
+    if value is None:
+        return None
+    try:
+        amount = float(value)
+    except (TypeError, ValueError):
+        return None
+    return amount if amount > 0 else None
+
+
+def _safe_confidence(value: object) -> float | None:
+    if value is None:
+        return None
+    try:
+        confidence = float(value)
+    except (TypeError, ValueError):
+        return None
+    return max(0.0, min(confidence, 1.0))
 
 
 def _fallback_expense_category_id(db: Session, user: User) -> str | None:

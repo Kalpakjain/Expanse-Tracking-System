@@ -1,13 +1,13 @@
 # Smart Expense Tracker
 
-An INR-first full-stack expense tracker that starts with reliable manual finance operations and grows into budgeting, OCR, and AI-assisted insights.
+An INR-first full-stack expense tracker that starts with reliable manual finance operations and grows into receipt review, split expenses, and AI-assisted insights.
 
 ## Current Status
 
 The repository now includes a working product foundation:
 
 - `frontend/`: multi-page Next.js experience for dashboard, transactions, categories, analytics, receipts, accounts, split expenses, and settings
-- `backend/`: FastAPI API with auth, accounts, categories, transactions, CSV tools, budgets, reports, receipts, and group expense splitting
+- `backend/`: FastAPI API with auth, accounts, categories, transactions, CSV tools, reports, receipts, and group expense splitting
 - `database/`: PostgreSQL reference schema and seed files aligned with the current MVP
 - `infra/`: Docker-based local and deployment-friendly runtime
 - `docs/`: architecture, roadmap, project layers, deployment, and workflow guides
@@ -20,12 +20,11 @@ The current MVP foundation already includes:
 - add-expense form wired to the backend flow
 - transaction CSV import/export from the dashboard
 - signup/login API with bearer-token sessions
-- user-scoped transactions, budgets, and receipts
+- user-scoped transactions, accounts, and receipts
 - category creation from the dashboard
 - transaction deletion from the dashboard
 - multi-section frontend navigation for home, categories, reports, receipts, split expenses, and about
-- monthly rupee budgets with backend persistence
-- report overview with category breakdown and budget utilization
+- report overview with category breakdown and spending insights
 - backend-generated smart insights for reports
 - receipt upload workflow with review, category suggestions, duplicate checks, and ledger posting
 - data-backed bank account management and split-expense pages
@@ -38,12 +37,12 @@ The current MVP foundation already includes:
 Build a secure expense tracker that helps users:
 
 - record income and expenses
-- manage categories and rupee-based budgets
+- manage categories and payment accounts
 - view dashboards and reports
 - upload receipts
 - get smart category suggestions
 - detect unusual spending patterns
-- receive budget alerts
+- review smart spending insights
 
 ## Product Layers
 
@@ -51,10 +50,10 @@ Build a secure expense tracker that helps users:
 Transaction logging, categories, payment context, and clean bookkeeping.
 
 2. `Control Layer`
-Budgets, category-based reports, and monthly spending review in INR.
+Category-based reports, account context, and monthly spending review in INR.
 
 3. `Automation Layer`
-Receipt workflows, recurring expense detection, and budget alert rules.
+Receipt workflows, recurring expense detection, and spending alert rules.
 
 4. `Intelligence Layer`
 Receipt OCR, AI categorization, anomaly detection, and natural-language insights.
@@ -70,7 +69,6 @@ Docker, CI, managed infrastructure, secrets, and public deployment.
 - add, edit, delete expenses
 - add income records
 - categories and payment accounts
-- monthly budgets
 - dashboard and reports
 - CSV import/export
 
@@ -184,9 +182,6 @@ npm run dev
 - `DELETE /api/v1/transactions/{transaction_id}`
 - `GET /api/v1/reports/summary`
 - `GET /api/v1/reports/overview`
-- `GET /api/v1/budgets`
-- `POST /api/v1/budgets`
-- `DELETE /api/v1/budgets/{budget_id}`
 - `GET /api/v1/groups`
 - `POST /api/v1/groups`
 - `GET /api/v1/groups/{group_id}/expenses`
@@ -233,7 +228,6 @@ To make the app truly public, we still need real deployment credentials and runt
 - accounts
 - transactions
 - categories
-- budgets
 - reports
 - receipts
 - split expenses
@@ -277,6 +271,6 @@ The first milestone should deliver:
 - create and manage categories
 - create, edit, and delete transactions
 - monthly dashboard
-- budget setup with simple alerts
+- category analytics with simple alerts
 
 Once this is stable, the smart features become much easier to add cleanly.

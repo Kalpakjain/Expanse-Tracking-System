@@ -26,8 +26,8 @@ Scope:
 
 - rupee-based dashboard summaries
 - category-level reporting
-- monthly budgets by category
-- budget utilization and remaining balance
+- account-level spending context
+- monthly category trends
 
 Current status:
 Implemented in the reports flow and backend overview APIs.
@@ -41,7 +41,7 @@ Scope:
 
 - receipt review workflows
 - duplicate detection
-- budget threshold alerts
+- spending threshold alerts
 - recurring-expense reminders
 
 Current status:
@@ -61,7 +61,7 @@ Scope:
 - natural-language insights
 
 Current status:
-Implemented locally through receipt review, category suggestions, duplicate checks, budget insights, and split-expense summaries. Full external OCR or hosted AI providers can be attached later.
+Implemented locally through receipt review, category suggestions, duplicate checks, spending insights, and split-expense summaries. Full external OCR or hosted AI providers can be attached later.
 
 ## Layer 5: Platform
 

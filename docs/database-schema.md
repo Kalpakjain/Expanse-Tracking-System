@@ -88,32 +88,6 @@ created_at
 updated_at
 ```
 
-### budgets
-
-Purpose:
-Track monthly limits for expense categories in INR.
-
-Fields:
-
-```text
-id
-user_id
-category_id
-month
-year
-limit_amount
-currency_code
-alert_threshold_percent
-is_active
-created_at
-updated_at
-```
-
-Rules:
-
-- one budget per category per month per year
-- budgets are intended for expense categories only
-
 ### receipts
 
 Purpose:
@@ -139,10 +113,9 @@ updated_at
 
 ## Current Relationships
 
-- one user has many payment accounts, transactions, budgets, receipts, groups, and split-expense records
+- one user has many payment accounts, transactions, receipts, groups, and split-expense records
 - one payment account has many transactions
 - one category has many transactions
-- one category has many budgets
 - global default categories can be shared by all users
 - user-created categories belong to one user
 
@@ -154,7 +127,6 @@ The seed data currently creates:
 - default payment accounts for Primary Wallet, Cash, and Credit Card
 - default categories for Food, Transport, Bills, and Salary
 - one sample INR expense transaction for the demo user
-- one sample monthly Food budget for the demo user
 
 ## Possible Later Tables
 

@@ -45,7 +45,7 @@ Use short, action-oriented commit messages:
 - `Add transaction create API`
 - `Build monthly dashboard cards`
 - `Integrate OCR receipt parsing`
-- `Fix budget percentage calculation`
+- `Fix category trend calculation`
 
 ## Pull Request Checklist
 
@@ -104,6 +104,6 @@ Protect `main` with:
 
 - `M1`: Core setup and auth
 - `M2`: Transactions and categories
-- `M3`: Budgets and dashboard
+- `M3`: Dashboard and analytics
 - `M4`: Receipt OCR
 - `M5`: AI insights

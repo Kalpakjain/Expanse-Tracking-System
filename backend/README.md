@@ -52,9 +52,6 @@ Keep `DATABASE_AUTO_CREATE_TABLES=false` for normal local and deployed environme
 - `DELETE /api/v1/transactions/{transaction_id}`
 - `GET /api/v1/reports/summary`
 - `GET /api/v1/reports/overview`
-- `GET /api/v1/budgets`
-- `POST /api/v1/budgets`
-- `DELETE /api/v1/budgets/{budget_id}`
 - `GET /api/v1/receipts`
 - `POST /api/v1/receipts`
 - `POST /api/v1/receipts/{receipt_id}/transaction`

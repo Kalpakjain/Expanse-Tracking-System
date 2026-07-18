@@ -94,27 +94,3 @@ VALUES (
     'Seed data for the dashboard preview'
 )
 ON CONFLICT (id) DO NOTHING;
-
-INSERT INTO budgets (
-    id,
-    user_id,
-    category_id,
-    month,
-    year,
-    limit_amount,
-    currency_code,
-    alert_threshold_percent,
-    is_active
-)
-VALUES (
-    'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
-    'dddddddd-dddd-dddd-dddd-dddddddddddd',
-    '11111111-1111-1111-1111-111111111111',
-    EXTRACT(MONTH FROM CURRENT_DATE)::INT,
-    EXTRACT(YEAR FROM CURRENT_DATE)::INT,
-    8000.00,
-    'INR',
-    80,
-    TRUE
-)
-ON CONFLICT (user_id, category_id, month, year) DO NOTHING;

@@ -45,7 +45,6 @@ class User(Base, TimestampMixin):
     payment_accounts: Mapped[list["PaymentAccount"]] = relationship(back_populates="user")
     transactions: Mapped[list["Transaction"]] = relationship(back_populates="user")
     receipts: Mapped[list["Receipt"]] = relationship(back_populates="user")
-    budgets: Mapped[list["Budget"]] = relationship(back_populates="user")
     groups_created: Mapped[list["Group"]] = relationship(back_populates="creator")
     group_memberships: Mapped[list["GroupMember"]] = relationship(back_populates="user")
     group_expenses_paid: Mapped[list["GroupExpense"]] = relationship(back_populates="payer")
@@ -73,7 +72,6 @@ class Category(Base, TimestampMixin):
 
     user: Mapped[User | None] = relationship(back_populates="categories")
     transactions: Mapped[list["Transaction"]] = relationship(back_populates="category")
-    budgets: Mapped[list["Budget"]] = relationship(back_populates="category")
 
 
 class PaymentAccount(Base, TimestampMixin):
@@ -137,23 +135,6 @@ class Receipt(Base, TimestampMixin):
 
     user: Mapped[User] = relationship(back_populates="receipts")
     suggested_category: Mapped[Category | None] = relationship()
-
-
-class Budget(Base, TimestampMixin):
-    __tablename__ = "budgets"
-
-    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
-    user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
-    category_id: Mapped[str] = mapped_column(ForeignKey("categories.id"), nullable=False, index=True)
-    month: Mapped[int] = mapped_column(Integer, nullable=False)
-    year: Mapped[int] = mapped_column(Integer, nullable=False)
-    limit_amount: Mapped[float] = mapped_column(Float, nullable=False)
-    currency_code: Mapped[str] = mapped_column(String(3), nullable=False, default="INR")
-    alert_threshold_percent: Mapped[int] = mapped_column(Integer, nullable=False, default=80)
-    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
-
-    user: Mapped[User] = relationship(back_populates="budgets")
-    category: Mapped[Category] = relationship(back_populates="budgets")
 
 
 class Group(Base, TimestampMixin):

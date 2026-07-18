@@ -12,7 +12,7 @@ export function AboutWorkspace() {
         <article className="panel stat-card">
           <div className="stat-label">Currency model</div>
           <div className="stat-value">INR</div>
-          <div className="stat-footnote">Rupee-first defaults across budgets and reporting</div>
+          <div className="stat-footnote">Rupee-first defaults across tracking and reporting</div>
         </article>
         <article className="panel stat-card">
           <div className="stat-label">Core stack</div>
@@ -49,7 +49,7 @@ export function AboutWorkspace() {
               <div>
                 <div className="item-title">Control layer</div>
                 <div className="item-subtitle">
-                  Monthly rupee budgets, report summaries, and policy-driven spending visibility.
+                  Report summaries, category trends, and policy-driven spending visibility.
                 </div>
               </div>
             </div>
@@ -58,7 +58,7 @@ export function AboutWorkspace() {
               <div>
                 <div className="item-title">Automation layer</div>
                 <div className="item-subtitle">
-                  Receipt workflows, recurring spend detection, and budget alert rules.
+                  Receipt workflows, recurring spend detection, and spending alert rules.
                 </div>
               </div>
             </div>

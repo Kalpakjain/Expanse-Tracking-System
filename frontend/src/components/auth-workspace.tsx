@@ -21,17 +21,17 @@ type MessageTone = "neutral" | "success" | "error";
 const infoSections: Record<AuthInfoSection, { title: string; body: string; points?: string[]; action?: string }> = {
   home: {
     title: "Login to see your dashboard",
-    body: "Your expense summary, budgets, receipts, and alerts stay private until you sign in.",
+    body: "Your expense summary, receipts, and alerts stay private until you sign in.",
     action: "Use the login form to continue.",
   },
   service: {
     title: "Services",
     body: "Everything needed to track and understand day-to-day spending.",
-    points: ["Expense and income tracking", "Budgets and analytics", "Receipt review", "Smart reminders"],
+    points: ["Expense and income tracking", "Analytics", "Receipt review", "Smart reminders"],
   },
   about: {
     title: "Our motive",
-    body: "We help users build a clear money habit: capture spending, control budgets, and make better monthly decisions.",
+    body: "We help users build a clear money habit: capture spending, review patterns, and make better monthly decisions.",
     points: ["Clarity over confusion", "Rupee-first planning", "Private financial workspace"],
   },
   contact: {
@@ -187,7 +187,7 @@ export function AuthWorkspace() {
   return (
     <main className="auth-page">
       <section className="auth-landing">
-        <article className="auth-visual-panel" aria-label="Budget tracking illustration">
+        <article className="auth-visual-panel" aria-label="Expense tracking illustration">
           <nav className="auth-mini-nav" aria-label="Preview navigation">
             {(["home", "service", "about", "contact"] as AuthInfoSection[]).map((section) => (
               <button
@@ -202,7 +202,7 @@ export function AuthWorkspace() {
           </nav>
           {activeInfoSection ? (
             <div className="auth-info-stage">
-              <span className="eyebrow">Budget Tracking</span>
+              <span className="eyebrow">Expense Tracking</span>
               <h2>{infoSections[activeInfoSection].title}</h2>
               <p>{infoSections[activeInfoSection].body}</p>
               {infoSections[activeInfoSection].points ? (

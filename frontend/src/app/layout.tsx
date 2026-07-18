@@ -6,7 +6,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Smart Expense Tracker",
-  description: "Track spending, budgets, receipts, and smart insights.",
+  description: "Track spending, receipts, and smart insights.",
 };
 
 export default function RootLayout({

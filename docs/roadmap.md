@@ -21,7 +21,6 @@ Ship a usable expense tracker without AI dependencies.
 - accounts
 - categories
 - transaction CRUD
-- budget CRUD
 - dashboard summary
 - monthly and category reports
 
@@ -29,7 +28,7 @@ Ship a usable expense tracker without AI dependencies.
 
 - user can record daily expenses
 - user can see current month spending
-- user can compare spending against budgets
+- user can compare spending across categories and months
 
 Status:
 Completed locally.
@@ -65,7 +64,7 @@ Help users understand and improve spending.
 ### Features
 
 - recurring expense detection
-- budget overrun alerts
+- unusual spending alerts
 - unusual spending alerts
 - monthly AI summary
 - split-expense summaries
@@ -76,7 +75,7 @@ Help users understand and improve spending.
 - alerts feel accurate enough to trust
 
 Status:
-Completed locally with report insights, budget alerts, recurring reminders, and split-expense summaries.
+Completed locally with report insights, recurring reminders, and split-expense summaries.
 
 ## Phase 4: Scale and Polish
 
@@ -103,7 +102,7 @@ Deployment-ready foundation is present. Public hosting still needs real infrastr
 ### Weeks 3-4
 
 - frontend dashboard
-- budget features
+- analytics features
 - reporting
 
 ### Weeks 5-6

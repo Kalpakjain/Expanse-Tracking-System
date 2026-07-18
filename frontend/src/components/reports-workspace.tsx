@@ -3,36 +3,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ChangeEvent } from "react";
 
-import { BudgetForm } from "@/components/budget-form";
-import { deleteBudget, getReportsOverview } from "@/lib/api";
+import { getReportsOverview } from "@/lib/api";
 import { formatCurrency } from "@/lib/format";
 import { useFinanceDashboard } from "@/lib/use-finance-dashboard";
-import type { Budget, ReportsOverview, Transaction } from "@/lib/types";
-
-const monthNames = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
-
-function budgetState(budget: Budget) {
-  if (budget.utilization_percent > 100) {
-    return { label: "Over budget", className: "budget-danger" };
-  }
-  if (budget.utilization_percent >= budget.alert_threshold_percent) {
-    return { label: "Near limit", className: "budget-warning" };
-  }
-  return { label: "On track", className: "budget-healthy" };
-}
+import type { ReportsOverview, Transaction } from "@/lib/types";
 
 function buildCategorySpendBreakdown(transactions: Transaction[]) {
   const totals = new Map<string, { amount: number; count: number }>();
@@ -74,14 +48,16 @@ function buildComparisonAnalysis(transactions: Transaction[], granularity: Granu
       d.setHours(0, 0, 0, 0);
     } else if (granularity === "monthly") {
       d.setDate(1);
-      d.setMonth(d.getMonth() - periodsBack * bucketCount + index);
+      d.setMonth(d.getMonth() - periodsBack * bucketCount - (bucketCount - 1) + index);
     } else if (granularity === "quarterly") {
       const currentQuarterStartMonth = Math.floor(d.getMonth() / 3) * 3;
       d.setDate(1);
-      d.setMonth(currentQuarterStartMonth - periodsBack * bucketCount * 3 + index * 3);
+      d.setMonth(
+        currentQuarterStartMonth - periodsBack * bucketCount * 3 - (bucketCount - 1) * 3 + index * 3
+      );
     } else {
       d.setMonth(0, 1);
-      d.setFullYear(d.getFullYear() - periodsBack * bucketCount + index);
+      d.setFullYear(d.getFullYear() - periodsBack * bucketCount - (bucketCount - 1) + index);
     }
     return d;
   }
@@ -108,12 +84,21 @@ function buildComparisonAnalysis(transactions: Transaction[], granularity: Granu
     return String(d.getFullYear());
   }
 
+  function dateKey(d: Date): string {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  }
+
   function sumExpensesInRange(start: Date, end: Date): number {
+    const startKey = dateKey(start);
+    const endKey = dateKey(end);
     return transactions
       .filter((t) => t.type === "expense")
       .filter((t) => {
-        const txDate = new Date(t.transaction_date);
-        return txDate >= start && txDate < end;
+        const txKey = dateKey(new Date(t.transaction_date));
+        return txKey >= startKey && txKey < endKey;
       })
       .reduce((sum, t) => sum + t.amount, 0);
   }
@@ -157,7 +142,7 @@ function exportTransactionsToCsv(transactions: Transaction[]) {
 }
 
 export function ReportsWorkspace() {
-  const { transactions, categories, loadDashboard } = useFinanceDashboard();
+  const { transactions, categories } = useFinanceDashboard();
   const [overview, setOverview] = useState<ReportsOverview>({
     summary: {
       total_income: 0,
@@ -168,16 +153,8 @@ export function ReportsWorkspace() {
     },
     category_breakdown: [],
     smart_insights: [],
-    budgets: [],
-    monthly_budget_total: 0,
-    over_budget_count: 0,
-    budgeted_categories: 0,
   });
   const [reportMessage, setReportMessage] = useState("");
-  const [deletingBudgetId, setDeletingBudgetId] = useState<string | null>(null);
-  const [editingBudget, setEditingBudget] = useState<Budget | null>(null);
-  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [granularity, setGranularity] = useState<Granularity>("monthly");
   const [isTransitioning, setIsTransitioning] = useState(false);
 
@@ -189,9 +166,6 @@ export function ReportsWorkspace() {
       category_color: matchingCategory?.color ?? "#0F766E",
       spent_amount: entry.amount,
       transaction_count: entry.count,
-      budget_limit: null,
-      remaining_amount: null,
-      utilization_percent: null,
     };
   });
 
@@ -243,23 +217,7 @@ export function ReportsWorkspace() {
   const totalSpend = spendingBreakdown.reduce((sum, entry) => sum + entry.spent_amount, 0);
   const topCategories = spendingBreakdown.slice(0, 2);
   const othersAmount = spendingBreakdown.slice(2).reduce((sum, entry) => sum + entry.spent_amount, 0);
-  const filteredBudgets = overview.budgets.filter(
-    (budget) => budget.month === selectedMonth && budget.year === selectedYear,
-  );
-  async function handleDeleteBudget(budgetId: string) {
-    setDeletingBudgetId(budgetId);
-    try {
-      await deleteBudget(budgetId);
-      await Promise.all([
-        loadDashboard("Budget deleted and dashboard refreshed from the database."),
-        loadReports("Budget deleted and reports refreshed."),
-      ]);
-    } catch {
-      setReportMessage("Could not delete the budget right now.");
-    } finally {
-      setDeletingBudgetId(null);
-    }
-  }
+  const shouldShowOthers = spendingBreakdown.length > 2 && othersAmount > 0;
 
   function handleGranularityChange(event: ChangeEvent<HTMLSelectElement>) {
     const nextGranularity = event.target.value as Granularity;
@@ -283,34 +241,24 @@ export function ReportsWorkspace() {
       <section className="page-header-compact">
         <div>
           <h1>Analytics</h1>
-          <p>Budgets, categories, and trends</p>
+          <p>Categories and spending trends</p>
         </div>
       </section>
 
       {reportMessage ? <div className="toast-inline">{reportMessage}</div> : null}
 
       <section className="grid stats-grid">
-        <article className="panel stat-card">
+        <article className="panel stat-card stat-card-income">
           <div className="stat-label">Income</div>
           <div className="stat-value">{formatCurrency(overview.summary.total_income, "INR")}</div>
-          <div className="stat-footnote">Recorded so far</div>
         </article>
-        <article className="panel stat-card">
+        <article className="panel stat-card stat-card-expenses">
           <div className="stat-label">Expenses</div>
           <div className="stat-value">{formatCurrency(overview.summary.total_expenses, "INR")}</div>
-          <div className="stat-footnote">Recorded spend</div>
         </article>
         <article className="panel stat-card">
           <div className="stat-label">Net</div>
           <div className="stat-value">{formatCurrency(overview.summary.balance, "INR")}</div>
-          <div className="stat-footnote">Balance to date</div>
-        </article>
-        <article className="panel stat-card">
-          <div className="stat-label">Monthly budget pool</div>
-          <div className="stat-value">{formatCurrency(overview.monthly_budget_total, "INR")}</div>
-          <div className="stat-footnote">
-            {overview.budgeted_categories} budgeted categories • {overview.over_budget_count} over budget
-          </div>
         </article>
       </section>
 
@@ -399,9 +347,7 @@ export function ReportsWorkspace() {
               </span>
             ) : null}
           </div>
-          <div className="spending-overview-subtitle">
-            From {formatCurrency(overview.monthly_budget_total, "INR")} budget
-          </div>
+          <div className="spending-overview-subtitle">This period&apos;s spending</div>
 
           {totalSpend > 0 ? (
             <>
@@ -415,7 +361,7 @@ export function ReportsWorkspace() {
                     }}
                   />
                 ))}
-                {othersAmount > 0 ? (
+                {shouldShowOthers ? (
                   <div style={{ width: `${(othersAmount / totalSpend) * 100}%`, background: "var(--line)" }} />
                 ) : null}
               </div>
@@ -433,7 +379,7 @@ export function ReportsWorkspace() {
                     <strong>{formatCurrency(category.spent_amount, "INR")}</strong>
                   </div>
                 ))}
-                {othersAmount > 0 ? (
+                {shouldShowOthers ? (
                   <div className="spending-legend-row">
                     <span>
                       <span className="legend-dot" style={{ background: "var(--line)" }} />
@@ -462,18 +408,7 @@ export function ReportsWorkspace() {
                 <div className="list-item" key={entry.category_id}>
                   <div>
                     <div className="item-title">{entry.category_name}</div>
-                    <div className="item-subtitle">
-                      {entry.transaction_count} transactions •{" "}
-                      {entry.budget_limit !== null
-                        ? `Budget ${formatCurrency(entry.budget_limit, "INR")}`
-                        : "No budget configured"}
-                    </div>
-                    {entry.remaining_amount !== null ? (
-                      <div className="item-subtitle">
-                        Remaining {formatCurrency(entry.remaining_amount, "INR")} •{" "}
-                        {entry.utilization_percent?.toFixed(1)}% used
-                      </div>
-                    ) : null}
+                    <div className="item-subtitle">{entry.transaction_count} transactions</div>
                   </div>
                   <div className="amount-expense">{formatCurrency(entry.spent_amount, "INR")}</div>
                 </div>
@@ -489,8 +424,8 @@ export function ReportsWorkspace() {
         <aside className="panel">
           <h2 className="section-title">Smart insights</h2>
           <p className="section-copy">
-            Backend-generated signals call out budget pressure, concentrated spend, and whether the
-            app has enough data for stronger recommendations.
+            Backend-generated signals call out concentrated spend and whether the app has enough
+            data for stronger recommendations.
           </p>
           <div className="insight-list">
             {overview.smart_insights.map((insight) => (
@@ -499,106 +434,6 @@ export function ReportsWorkspace() {
                 <div className="item-subtitle">{insight.message}</div>
               </div>
             ))}
-          </div>
-        </aside>
-      </section>
-
-      <section className="grid content-grid">
-        <BudgetForm
-          categories={categories}
-          onCreated={async () => {
-            await Promise.all([
-              loadDashboard("Budget saved and dashboard refreshed from the database."),
-              loadReports("Budget saved and reports refreshed."),
-            ]);
-          }}
-        />
-
-        <aside className="panel">
-          <div className="panel-header budget-header">
-            <div>
-              <h2 className="section-title">Configured budgets</h2>
-              <p className="section-copy">Review limits, warnings, and utilization by month.</p>
-            </div>
-            <div className="budget-period-controls">
-              <select
-                className="field-input"
-                value={selectedMonth}
-                onChange={(event) => setSelectedMonth(Number(event.target.value))}
-                aria-label="Budget month"
-              >
-                {monthNames.map((month, index) => (
-                  <option key={month} value={index + 1}>
-                    {month}
-                  </option>
-                ))}
-              </select>
-              <input
-                className="field-input"
-                type="number"
-                min="2025"
-                max="2100"
-                value={selectedYear}
-                onChange={(event) => setSelectedYear(Number(event.target.value))}
-                aria-label="Budget year"
-              />
-            </div>
-          </div>
-          <div className="list">
-            {filteredBudgets.length ? (
-              filteredBudgets.map((budget) => {
-                const state = budgetState(budget);
-                return (
-                <div className={`list-item budget-item ${state.className}`} key={budget.id}>
-                  <div className="list-main">
-                    <div>
-                      <div className="item-title">
-                        {budget.category_name} • {monthNames[budget.month - 1]} {budget.year}
-                      </div>
-                      <div className="item-subtitle">
-                        Limit {formatCurrency(budget.limit_amount, budget.currency_code)} • Spent{" "}
-                        {formatCurrency(budget.spent_amount, budget.currency_code)}
-                      </div>
-                      <div className="item-subtitle">
-                        Remaining {formatCurrency(budget.remaining_amount, budget.currency_code)} •{" "}
-                        {budget.utilization_percent.toFixed(1)}% used
-                      </div>
-                      <div className="budget-progress" aria-label={`${budget.utilization_percent}% used`}>
-                        <span style={{ width: `${Math.min(budget.utilization_percent, 100)}%` }} />
-                      </div>
-                      <div className="budget-state-row">
-                        <span className="budget-state-label">{state.label}</span>
-                        <span className="item-subtitle">Alert at {budget.alert_threshold_percent}%</span>
-                      </div>
-                    </div>
-                    <div className="row-actions">
-                      <button
-                        className="button button-secondary compact-button"
-                        type="button"
-                        onClick={() => setEditingBudget(budget)}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        className="button button-tertiary compact-button"
-                        type="button"
-                        disabled={deletingBudgetId === budget.id}
-                        onClick={() => {
-                          void handleDeleteBudget(budget.id);
-                        }}
-                      >
-                        {deletingBudgetId === budget.id ? "Deleting..." : "Delete"}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-                );
-              })
-            ) : (
-              <div className="empty-state">
-                No budgets for {monthNames[selectedMonth - 1]} {selectedYear}. Create one to begin tracking limits.
-              </div>
-            )}
           </div>
         </aside>
       </section>
@@ -619,23 +454,6 @@ export function ReportsWorkspace() {
         </div>
       </section>
 
-      {editingBudget ? (
-        <div className="modal-backdrop" role="presentation">
-          <div className="modal-panel" role="dialog" aria-modal="true" aria-label="Edit budget form">
-            <BudgetForm
-              budget={editingBudget}
-              categories={categories}
-              onCancel={() => setEditingBudget(null)}
-              onCreated={async () => {
-                await Promise.all([
-                  loadDashboard("Budget updated and dashboard refreshed from the database."),
-                  loadReports("Budget updated and reports refreshed."),
-                ]);
-              }}
-            />
-          </div>
-        </div>
-      ) : null}
     </main>
   );
 }

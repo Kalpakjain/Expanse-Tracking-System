@@ -3,10 +3,8 @@ import type {
   AuthRegisterInput,
   AuthRegisterResponse,
   AuthSession,
-  Budget,
   Category,
   ChangePasswordInput,
-  CreateBudgetInput,
   CreateCategoryInput,
   CreateGroupExpenseInput,
   CreateGroupInput,
@@ -27,7 +25,6 @@ import type {
   Transaction,
   UpdateTransactionInput,
   VerifyEmailInput,
-  UpdateBudgetInput,
   User,
 } from "@/lib/types";
 
@@ -267,42 +264,6 @@ export async function updateTransaction(transactionId: string, payload: UpdateTr
 
 export async function deleteTransaction(transactionId: string) {
   const response = await fetch(`${API_BASE_URL}/api/v1/transactions/${transactionId}`, {
-    method: "DELETE",
-    headers: authHeaders(),
-  });
-
-  if (!response.ok) {
-    throw new Error(`Request failed with status ${response.status}`);
-  }
-}
-
-export function getBudgets() {
-  return fetchJson<Budget[]>("/api/v1/budgets");
-}
-
-export function createBudget(payload: CreateBudgetInput) {
-  return postJson<Budget, CreateBudgetInput>("/api/v1/budgets", payload);
-}
-
-export async function updateBudget(budgetId: string, payload: UpdateBudgetInput) {
-  const response = await fetch(`${API_BASE_URL}/api/v1/budgets/${budgetId}`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      ...authHeaders(),
-    },
-    body: JSON.stringify(payload),
-  });
-
-  if (!response.ok) {
-    throw new Error(`Request failed with status ${response.status}`);
-  }
-
-  return response.json() as Promise<Budget>;
-}
-
-export async function deleteBudget(budgetId: string) {
-  const response = await fetch(`${API_BASE_URL}/api/v1/budgets/${budgetId}`, {
     method: "DELETE",
     headers: authHeaders(),
   });

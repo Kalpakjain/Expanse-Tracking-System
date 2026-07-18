@@ -132,34 +132,6 @@ export type ChangePasswordInput = {
   new_password: string;
 };
 
-export type Budget = {
-  id: string;
-  category_id: string;
-  category_name: string;
-  month: number;
-  year: number;
-  limit_amount: number;
-  spent_amount: number;
-  remaining_amount: number;
-  utilization_percent: number;
-  currency_code: string;
-  alert_threshold_percent: number;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
-};
-
-export type CreateBudgetInput = {
-  category_id: string;
-  month: number;
-  year: number;
-  limit_amount: number;
-  currency_code: string;
-  alert_threshold_percent: number;
-};
-
-export type UpdateBudgetInput = CreateBudgetInput;
-
 export type GroupMember = {
   user_id: string;
   full_name: string;
@@ -252,19 +224,12 @@ export type CategoryReportItem = {
   category_color: string;
   spent_amount: number;
   transaction_count: number;
-  budget_limit: number | null;
-  remaining_amount: number | null;
-  utilization_percent: number | null;
 };
 
 export type ReportsOverview = {
   summary: DashboardSummary;
   category_breakdown: CategoryReportItem[];
   smart_insights: SmartInsight[];
-  budgets: Budget[];
-  monthly_budget_total: number;
-  over_budget_count: number;
-  budgeted_categories: number;
 };
 
 export type SmartInsight = {

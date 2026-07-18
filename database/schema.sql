@@ -54,21 +54,6 @@ CREATE TABLE IF NOT EXISTS transactions (
     updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS budgets (
-    id UUID PRIMARY KEY,
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    category_id UUID NOT NULL REFERENCES categories(id) ON DELETE CASCADE,
-    month INTEGER NOT NULL CHECK (month BETWEEN 1 AND 12),
-    year INTEGER NOT NULL CHECK (year BETWEEN 2025 AND 2100),
-    limit_amount DOUBLE PRECISION NOT NULL CHECK (limit_amount > 0),
-    currency_code CHAR(3) NOT NULL DEFAULT 'INR',
-    alert_threshold_percent INTEGER NOT NULL DEFAULT 80 CHECK (alert_threshold_percent BETWEEN 1 AND 100),
-    is_active BOOLEAN NOT NULL DEFAULT TRUE,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    UNIQUE (user_id, category_id, month, year)
-);
-
 CREATE TABLE IF NOT EXISTS receipts (
     id UUID PRIMARY KEY,
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -90,6 +75,4 @@ CREATE INDEX IF NOT EXISTS idx_transactions_user_date ON transactions(user_id, t
 CREATE INDEX IF NOT EXISTS idx_transactions_category_date ON transactions(category_id, transaction_date);
 CREATE INDEX IF NOT EXISTS idx_payment_accounts_user ON payment_accounts(user_id);
 CREATE INDEX IF NOT EXISTS idx_transactions_account ON transactions(account_id);
-CREATE INDEX IF NOT EXISTS idx_budgets_period ON budgets(year, month);
-CREATE INDEX IF NOT EXISTS idx_budgets_user_period ON budgets(user_id, year, month);
 CREATE INDEX IF NOT EXISTS idx_receipts_created_at ON receipts(created_at);

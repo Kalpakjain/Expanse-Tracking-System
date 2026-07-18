@@ -27,7 +27,7 @@ FastAPI also connects to:
 
 - authentication screens
 - transaction forms
-- category and budget management
+- category management
 - dashboards and charts
 - receipt upload UI
 - split expense workspace
@@ -37,7 +37,6 @@ FastAPI also connects to:
 
 - authentication and authorization
 - transaction CRUD APIs
-- budget logic
 - reporting APIs
 - group expense splitting APIs
 - OCR job orchestration
@@ -63,7 +62,7 @@ FastAPI also connects to:
 
 - normalized financial records
 - audit-friendly timestamps
-- category, budget, receipt, and split-expense persistence
+- category, receipt, and split-expense persistence
 - PostgreSQL-first development and deployment with Alembic migrations
 
 ### Worker Layer
@@ -89,7 +88,6 @@ FastAPI also connects to:
 - `/accounts`
 - `/categories`
 - `/transactions`
-- `/budgets`
 - `/reports`
 - `/receipts`
 - `/groups`
@@ -102,7 +100,7 @@ Start with rules before machine learning where possible:
 
 - keyword-based category matching
 - merchant-based recurring detection
-- threshold-based budget alerts
+- threshold-based spending alerts
 
 Then add AI where it clearly improves usability:
 

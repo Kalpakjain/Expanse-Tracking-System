@@ -5,6 +5,12 @@ from app.core.config import settings
 from app.db.models import Base
 
 
+def _normalize_database_url(url: str) -> str:
+    if url.startswith("postgresql://"):
+        return url.replace("postgresql://", "postgresql+psycopg://", 1)
+    return url
+
+
 def _sqlite_connect_args() -> dict[str, bool]:
     if settings.database_url.startswith("sqlite"):
         return {"check_same_thread": False}
@@ -12,7 +18,7 @@ def _sqlite_connect_args() -> dict[str, bool]:
 
 
 engine = create_engine(
-    settings.database_url,
+    _normalize_database_url(settings.database_url),
     connect_args=_sqlite_connect_args(),
 )
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False, expire_on_commit=False)

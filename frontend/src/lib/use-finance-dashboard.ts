@@ -114,9 +114,9 @@ export function useFinanceDashboard() {
 
       startTransition(() => {
         setSummary(nextSummary);
-        setTransactions(nextTransactions.length ? nextTransactions : fallbackTransactions);
-        setCategories(nextCategories.length ? nextCategories : fallbackCategories);
-        setAccounts(nextAccounts.length ? nextAccounts : fallbackAccounts);
+        setTransactions(nextTransactions);
+        setCategories(nextCategories);
+        setAccounts(nextAccounts);
         setStatusLabel(successLabel ?? "Connected to the FastAPI backend.");
       });
     } catch {

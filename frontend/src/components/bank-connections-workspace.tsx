@@ -99,39 +99,43 @@ export function BankConnectionsWorkspace() {
           <h2 className="section-title">Connected accounts</h2>
           <p className="section-copy">Real account records stored through the FastAPI backend.</p>
           <div className="account-grid">
-            {accounts.map((account) => (
-              <div className="account-card" key={account.id}>
-                {account.is_default && <span className="account-card-badge">DEFAULT</span>}
-                <div
-                  className="account-card-icon"
-                  style={{
-                    background: {
-                      bank: "var(--secondary)",
-                      cash: "var(--accent)",
-                      upi: "var(--primary)",
-                      credit_card: "#8f2450",
-                      wallet: "var(--primary)",
-                    }[account.type],
-                  }}
-                >
-                  <span className="nav-icon" aria-hidden="true">{typeIcons[account.type]}</span>
+            {accounts.length ? (
+              accounts.map((account) => (
+                <div className="account-card" key={account.id}>
+                  {account.is_default && <span className="account-card-badge">DEFAULT</span>}
+                  <div
+                    className="account-card-icon"
+                    style={{
+                      background: {
+                        bank: "var(--secondary)",
+                        cash: "var(--accent)",
+                        upi: "var(--primary)",
+                        credit_card: "#8f2450",
+                        wallet: "var(--primary)",
+                      }[account.type],
+                    }}
+                  >
+                    <span className="nav-icon" aria-hidden="true">{typeIcons[account.type]}</span>
+                  </div>
+                  <div className="account-card-name">{account.name}</div>
+                  <div className="account-card-subtitle">
+                    {account.type.replace("_", " ")}
+                    {account.institution_name ? ` - ${account.institution_name}` : ""}
+                  </div>
+                  <div className="account-card-balance">{formatCurrency(account.current_balance, account.currency_code)}</div>
+                  <div className="account-card-actions">
+                    <button className="button button-secondary compact-button" type="button" onClick={() => openAccountForm(account)}>
+                      Edit
+                    </button>
+                    <button className="button button-danger-outline compact-button" type="button" onClick={() => handleDeactivate(account.id)}>
+                      Deactivate
+                    </button>
+                  </div>
                 </div>
-                <div className="account-card-name">{account.name}</div>
-                <div className="account-card-subtitle">
-                  {account.type.replace("_", " ")}
-                  {account.institution_name ? ` - ${account.institution_name}` : ""}
-                </div>
-                <div className="account-card-balance">{formatCurrency(account.current_balance, account.currency_code)}</div>
-                <div className="account-card-actions">
-                  <button className="button button-secondary compact-button" type="button" onClick={() => openAccountForm(account)}>
-                    Edit
-                  </button>
-                  <button className="button button-danger-outline compact-button" type="button" onClick={() => handleDeactivate(account.id)}>
-                    Deactivate
-                  </button>
-                </div>
-              </div>
-            ))}
+              ))
+            ) : (
+              <div className="empty-state">No accounts yet. Add your first wallet, bank, or card.</div>
+            )}
             <button type="button" className="account-card account-card-add" onClick={() => openAccountForm()}>
               <span className="account-card-add-icon">+</span>
               Add another account

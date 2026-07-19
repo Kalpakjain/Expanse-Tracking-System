@@ -32,18 +32,22 @@ export function CategoriesWorkspace() {
             These cards are the classification layer for the rest of the product.
           </p>
           <div className="category-grid">
-            {categories.map((category) => (
-              <article className="category-card" key={category.id}>
-                <div className="category-card-top">
-                  <span className="badge-dot large-dot" style={{ backgroundColor: category.color }} />
-                  <span className="badge">{category.type}</span>
-                </div>
-                <h3 className="category-title">{category.name}</h3>
-                <p className="item-subtitle">
-                  Icon label: {category.icon} {category.is_default ? "• Default" : "• Custom"}
-                </p>
-              </article>
-            ))}
+            {categories.length ? (
+              categories.map((category) => (
+                <article className="category-card" key={category.id}>
+                  <div className="category-card-top">
+                    <span className="badge-dot large-dot" style={{ backgroundColor: category.color }} />
+                    <span className="badge">{category.type}</span>
+                  </div>
+                  <h3 className="category-title">{category.name}</h3>
+                  <p className="item-subtitle">
+                    Icon label: {category.icon} {category.is_default ? "• Default" : "• Custom"}
+                  </p>
+                </article>
+              ))
+            ) : (
+              <div className="empty-state">No categories yet. Create your first category to classify transactions.</div>
+            )}
           </div>
         </aside>
       </section>

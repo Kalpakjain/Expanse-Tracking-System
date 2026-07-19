@@ -508,46 +508,50 @@ export function HomeWorkspace() {
             ))}
           </select>
           <div className="account-card-grid compact-account-grid">
-            {accounts.map((account) => (
-              <div
-                className={
-                  selectedAccountId === account.id ? "account-card account-card-active" : "account-card"
-                }
-                key={account.id}
-              >
-                <button className="account-card-main" type="button" onClick={() => setSelectedAccountId(account.id)}>
-                  <span className="badge-dot large-dot" style={{ backgroundColor: account.color }} />
-                  <span className="item-title">{account.name}</span>
-                  <strong>{formatCurrency(account.current_balance, account.currency_code)}</strong>
-                  <span className="item-subtitle">
-                    {account.type.replace("_", " ")}
-                    {account.is_default ? " • default" : ""}
-                  </span>
-                </button>
-                <div className="row-actions account-actions">
-                  <button
-                    className="button button-secondary compact-button"
-                    type="button"
-                    onClick={() => openAccountForm(account)}
-                  >
-                    Edit
+            {accounts.length ? (
+              accounts.map((account) => (
+                <div
+                  className={
+                    selectedAccountId === account.id ? "account-card account-card-active" : "account-card"
+                  }
+                  key={account.id}
+                >
+                  <button className="account-card-main" type="button" onClick={() => setSelectedAccountId(account.id)}>
+                    <span className="badge-dot large-dot" style={{ backgroundColor: account.color }} />
+                    <span className="item-title">{account.name}</span>
+                    <strong>{formatCurrency(account.current_balance, account.currency_code)}</strong>
+                    <span className="item-subtitle">
+                      {account.type.replace("_", " ")}
+                      {account.is_default ? " • default" : ""}
+                    </span>
                   </button>
-                  <button
-                    className="button button-tertiary compact-button"
-                    type="button"
-                    disabled={deactivatingAccountId === account.id || accounts.length <= 1}
-                    onClick={() => {
-                      void removeAccount(account.id);
-                      if (selectedAccountId === account.id) {
-                        setSelectedAccountId("all");
-                      }
-                    }}
-                  >
-                    {deactivatingAccountId === account.id ? "Removing..." : "Deactivate"}
-                  </button>
+                  <div className="row-actions account-actions">
+                    <button
+                      className="button button-secondary compact-button"
+                      type="button"
+                      onClick={() => openAccountForm(account)}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      className="button button-tertiary compact-button"
+                      type="button"
+                      disabled={deactivatingAccountId === account.id || accounts.length <= 1}
+                      onClick={() => {
+                        void removeAccount(account.id);
+                        if (selectedAccountId === account.id) {
+                          setSelectedAccountId("all");
+                        }
+                      }}
+                    >
+                      {deactivatingAccountId === account.id ? "Removing..." : "Deactivate"}
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))
+            ) : (
+              <div className="empty-state">No payment accounts yet. Add an account to track balances.</div>
+            )}
           </div>
         </aside>
       </section>

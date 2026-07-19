@@ -70,8 +70,28 @@ def register_user(db: Session, payload: AuthRegister) -> AuthRegisterResponse:
 
 def authenticate_user(db: Session, payload: AuthLogin) -> AuthSession:
     user = get_user_by_email(db, payload.email)
-    if user is None or not user.is_active or not verify_password(payload.password, user.password_hash):
+    if user is None or not user.is_active:
         raise ValueError("Invalid email or password.")
+
+    now = datetime.utcnow()
+    if user.login_locked_until is not None and user.login_locked_until > now:
+        raise ValueError("Too many failed attempts. Try again later.")
+
+    if not verify_password(payload.password, user.password_hash):
+        user.login_attempt_count += 1
+        if user.login_attempt_count >= 5:
+            user.login_attempt_count = 0
+            user.login_locked_until = now + timedelta(minutes=15)
+        db.add(user)
+        db.commit()
+        raise ValueError("Invalid email or password.")
+
+    user.login_attempt_count = 0
+    user.login_locked_until = None
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+
     if not user.email_verified:
         raise ValueError("Please verify your email before signing in.")
     return _to_auth_session(user)

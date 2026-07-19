@@ -264,6 +264,36 @@ body {
   border-top: 1px solid var(--line);
 }
 
+.mobile-topbar,
+.mobile-nav-backdrop {
+  display: none;
+}
+
+.mobile-topbar-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.mobile-topbar-title {
+  color: var(--secondary);
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.mobile-menu-button {
+  width: 44px;
+  height: 44px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fffaf2;
+  color: var(--primary);
+  cursor: pointer;
+}
+
 a {
   color: inherit;
   text-decoration: none;
@@ -3774,5 +3804,303 @@ a {
 
   .confirmation-actions {
     flex-direction: column;
+  }
+}
+
+@media (max-width: 860px) {
+  .app-shell {
+    flex-direction: column;
+    display: flex;
+  }
+
+  .mobile-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    padding: 12px 16px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .mobile-topbar .site-brand-mark {
+    width: 40px;
+    height: 40px;
+    flex-basis: 40px;
+    border-radius: 10px;
+  }
+
+  .site-header,
+  .site-header.site-header-collapsed {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: auto;
+    bottom: auto;
+    width: min(300px, calc(100vw - 56px));
+    max-width: 300px;
+    height: 100vh;
+    min-height: 100vh;
+    padding: 14px;
+    transform: translateX(-100%);
+    transition: transform 200ms ease;
+    z-index: 40;
+    border-right: 1px solid var(--line);
+    border-bottom: 0;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  .site-header.site-header-mobile-open,
+  .site-header.site-header-collapsed.site-header-mobile-open {
+    transform: translateX(0);
+  }
+
+  .site-header-inner,
+  .site-header-collapsed .site-header-inner {
+    height: 100%;
+    padding: 8px;
+    align-items: stretch;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .site-header-top,
+  .site-header-collapsed .site-header-top {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .site-header-collapsed .site-brand {
+    justify-content: flex-start;
+    gap: 12px;
+  }
+
+  .site-header-collapsed .site-brand-text,
+  .site-header-collapsed .site-nav-label,
+  .site-header-collapsed .site-brand-copy {
+    width: auto;
+    opacity: 1;
+    overflow: visible;
+    white-space: normal;
+  }
+
+  .site-header-collapsed .site-nav,
+  .site-header-collapsed .site-footer-actions {
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .site-nav,
+  .site-header-collapsed .site-nav {
+    flex-direction: column;
+    flex-wrap: nowrap;
+  }
+
+  .site-nav-link,
+  .site-header-collapsed .site-nav-link,
+  .site-header-collapsed .site-footer-actions .button {
+    width: 100%;
+    min-height: 44px;
+    height: auto;
+    justify-content: flex-start;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: 12px;
+  }
+
+  .sidebar-toggle {
+    display: none;
+  }
+
+  .site-footer-actions {
+    display: grid;
+  }
+
+  .mobile-nav-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(33, 31, 27, 0.4);
+    z-index: 35;
+  }
+
+  .page-shell,
+  .split-layout-shell {
+    width: 100%;
+    min-width: 0;
+    padding: 22px 16px 48px;
+  }
+}
+
+@media (max-width: 720px) {
+  .stats-grid,
+  .stats-grid-3,
+  .analytics-hero-grid,
+  .content-grid,
+  .account-grid,
+  .receipt-grid,
+  .split-groups-grid,
+  .dashboard-overview-grid,
+  .dashboard-main-grid,
+  .analysis-card-grid,
+  .account-card-grid,
+  .compact-account-grid,
+  .split-stat-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .transactions-filter-bar {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .date-filter-control {
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto;
+  }
+
+  .page-header-compact {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .page-header-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .panel-header,
+  .receipt-card-top,
+  .receipt-meta-row,
+  .receipt-actions {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .transaction-history-card {
+    grid-template-columns: 44px minmax(0, 1fr) 42px;
+    gap: 12px;
+  }
+
+  .transaction-category-pill,
+  .transaction-date-block,
+  .transaction-amount {
+    grid-column: 2 / -1;
+    justify-self: start;
+  }
+
+  .holding-table {
+    overflow-x: auto;
+  }
+
+  .holding-row {
+    min-width: 520px;
+  }
+}
+
+@media (max-width: 640px) {
+  .button,
+  .site-nav-link,
+  .account-card-actions .button,
+  .mobile-menu-button,
+  .filter-control {
+    min-height: 44px;
+  }
+
+  .page-header-compact h1,
+  .compact-page-heading h1,
+  .transactions-history-header h1 {
+    font-size: clamp(1.35rem, 7vw, 1.9rem);
+  }
+
+  .page-header-compact p {
+    font-size: 0.88rem;
+    font-weight: 600;
+  }
+
+  .stat-value {
+    font-size: 1.45rem;
+  }
+
+  .avatar-circle {
+    width: 24px;
+    height: 24px;
+    margin-left: -6px;
+    font-size: 10px;
+  }
+
+  .avatar-circle:first-child {
+    margin-left: 0;
+  }
+
+  .avatar-circle-sm {
+    width: 24px;
+    height: 24px;
+    font-size: 10px;
+  }
+
+  .split-wizard-backdrop {
+    padding: 16px;
+  }
+
+  .split-wizard-panel {
+    width: min(440px, calc(100vw - 32px));
+    max-height: calc(100vh - 32px);
+    overflow-y: auto;
+  }
+
+  .split-wizard-header,
+  .split-wizard-footer,
+  .split-wizard-body {
+    padding: 16px;
+  }
+
+  .split-stepper {
+    padding-inline: 16px;
+    gap: 6px;
+  }
+
+  .step-label,
+  .step-label-active {
+    font-size: 12px;
+  }
+
+  .account-card-actions,
+  .confirmation-actions {
+    width: 100%;
+  }
+
+  .account-card-actions .button,
+  .confirmation-actions .button {
+    flex: 1 1 auto;
+  }
+}
+
+@media (max-width: 420px) {
+  .mobile-topbar-title {
+    font-size: 0.94rem;
+  }
+
+  .transaction-history-card {
+    grid-template-columns: 40px minmax(0, 1fr) 38px;
+    padding: 12px;
+  }
+
+  .transaction-avatar {
+    width: 38px;
+    height: 38px;
+  }
+
+  .filter-control {
+    padding-inline: 8px;
+    font-size: 0.8rem;
+  }
+
+  .date-filter-control input {
+    font-size: 0.74rem;
   }
 }

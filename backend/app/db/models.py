@@ -40,6 +40,8 @@ class User(Base, TimestampMixin):
     otp_request_window_started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=False), nullable=True)
     otp_request_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     otp_attempt_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    login_attempt_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    login_locked_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=False), nullable=True)
 
     categories: Mapped[list["Category"]] = relationship(back_populates="user")
     payment_accounts: Mapped[list["PaymentAccount"]] = relationship(back_populates="user")

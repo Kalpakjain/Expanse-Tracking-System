@@ -15,12 +15,21 @@ const links = [
   { href: "/settings", label: "Settings", icon: "settings" },
 ];
 
-export function SiteHeader() {
+type SiteHeaderProps = {
+  isMobileOpen?: boolean;
+};
+
+export function SiteHeader({ isMobileOpen = false }: SiteHeaderProps) {
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const headerClassName = [
+    "site-header",
+    isCollapsed ? "site-header-collapsed" : "",
+    isMobileOpen ? "site-header-mobile-open" : "",
+  ].filter(Boolean).join(" ");
 
   return (
-    <aside className={isCollapsed ? "site-header site-header-collapsed" : "site-header"}>
+    <aside className={headerClassName}>
       <div className="site-header-inner">
         <div className="site-header-top">
           <Link className="site-brand" href="/" title="FinTrack AI">

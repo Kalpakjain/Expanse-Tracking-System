@@ -11,6 +11,8 @@ from app.services.receipts import create_receipt, create_transaction_from_receip
 
 
 router = APIRouter()
+ALLOWED_RECEIPT_CONTENT_TYPES = {"image/jpeg", "image/png", "image/webp", "application/pdf"}
+MAX_RECEIPT_FILE_SIZE = 10 * 1024 * 1024
 
 
 @router.get("/", response_model=list[ReceiptRead])
@@ -29,6 +31,17 @@ async def upload_receipt(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> ReceiptRead:
+    if file.content_type not in ALLOWED_RECEIPT_CONTENT_TYPES:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Only JPEG, PNG, WEBP, or PDF files are allowed.",
+        )
+
+    file_bytes = await file.read()
+    if len(file_bytes) > MAX_RECEIPT_FILE_SIZE:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="File must be under 10MB.")
+    await file.seek(0)
+
     return await create_receipt(db, current_user, file, merchant_hint, amount_hint)
 
 

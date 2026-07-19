@@ -1,5 +1,4 @@
-from email.message import EmailMessage
-import smtplib
+import httpx
 
 from app.core.config import settings
 
@@ -9,31 +8,35 @@ class EmailSendError(RuntimeError):
 
 
 def send_email(to: str, subject: str, html: str, text: str | None = None) -> bool:
-    if not _smtp_is_configured():
+    if not settings.email_enabled or not settings.brevo_api_key or not settings.sender_email:
         return False
 
-    message = EmailMessage()
-    message["Subject"] = subject
-    message["From"] = f"{settings.sender_name} <{settings.sender_email}>"
-    message["To"] = to
-    message.set_content(text or _plain_text_from_html(html))
-    message.add_alternative(html, subtype="html")
+    payload = {
+        "sender": {"name": settings.sender_name, "email": settings.sender_email},
+        "to": [{"email": to}],
+        "subject": subject,
+        "htmlContent": html,
+        "textContent": text or _plain_text_from_html(html),
+    }
+    headers = {
+        "api-key": settings.brevo_api_key,
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+    }
 
     try:
-        with smtplib.SMTP(settings.brevo_smtp_host, settings.brevo_smtp_port, timeout=12) as smtp:
-            smtp.starttls()
-            smtp.login(settings.brevo_smtp_user, settings.brevo_smtp_pass)
-            smtp.send_message(message)
-    except smtplib.SMTPAuthenticationError as exc:
-        message = exc.smtp_error.decode(errors="ignore") if isinstance(exc.smtp_error, bytes) else str(exc.smtp_error)
-        if "Unauthorized IP address" in message:
-            raise EmailSendError(
-                "Brevo blocked this server IP. Add your current IP to Brevo authorized IPs, then try again."
-            ) from exc
-        raise EmailSendError("Brevo SMTP login failed. Check your SMTP login and SMTP key.") from exc
-    except smtplib.SMTPException as exc:
+        response = httpx.post(
+            "https://api.brevo.com/v3/smtp/email",
+            json=payload,
+            headers=headers,
+            timeout=12,
+        )
+        response.raise_for_status()
+    except httpx.HTTPStatusError as exc:
+        if exc.response.status_code == 401:
+            raise EmailSendError("Brevo API key is invalid. Check your API key.") from exc
         raise EmailSendError("Could not send verification email. Please try again.") from exc
-    except OSError as exc:
+    except httpx.RequestError as exc:
         raise EmailSendError("Email service is not reachable right now. Please try again.") from exc
 
     return True

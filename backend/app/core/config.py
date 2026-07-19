@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     brevo_smtp_port: int = 587
     brevo_smtp_user: str = ""
     brevo_smtp_pass: str = ""
+    brevo_api_key: str = ""
     sender_email: str = ""
     sender_name: str = "FinTrack AI"
     otp_ttl_minutes: int = 5
